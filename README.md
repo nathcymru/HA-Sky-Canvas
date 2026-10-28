@@ -6,6 +6,10 @@ Default and Christmas house scenes are included so you can see it working immedi
 
 > Development preview. Home Assistant Core 2026.10.4 is the current test target. Live installation and visual acceptance are recorded separately from automated checks.
 
+![Sky Canvas theme settings with the bundled day and night house images](docs/settings-preview.png)
+
+Theme settings shown in the local development preview with demonstration data and the included Default images.
+
 ## Features
 
 - Standard Home Assistant weather entity and `sun.sun` for conditions and day/night.
@@ -50,7 +54,7 @@ The [Met Office example](examples/README.md) supplies a Home Assistant package a
 
 An optional Lovelace card plays the direct Met Office integration's cached precipitation frames. It shows actual published forecast times, the model run, a time slider and Play/Pause controls. It starts paused, stops when hidden, supports keyboard controls and follows Home Assistant's timezone. Failed or outdated data is labelled explicitly.
 
-Register `/ha_sky_canvas/sky-canvas.js?v=0.1.0` as a **JavaScript Module** in **Settings → Dashboards → Resources** before adding the card. Use the same URL as the installed integration's frontend module. This ordinary Lovelace resource ensures a fresh direct dashboard load can discover the card.
+Register `/ha_sky_canvas/sky-canvas.js?v=0.1.0-2` as a **JavaScript Module** in **Settings → Dashboards → Resources** before adding the card. Use the same URL as the installed integration's frontend module. This ordinary Lovelace resource ensures a fresh direct dashboard load can discover the card.
 
 ```yaml
 type: custom:ha-sky-canvas-forecast-map
@@ -58,7 +62,7 @@ entity: sensor.metoffice_direct_forecast_map
 title: Precipitation forecast
 ```
 
-This requires the separate `metoffice_direct` backend and a configured Map Images precipitation order. It is a forecast, not live radar. The backend discovers valid frames, selects one consistent model run, enforces the shared API allowance and serves authenticated local images. Opening additional dashboards or playing the animation does not make more Met Office requests. No WMS endpoint or browser-visible API key is used.
+This requires the separate [Met Office Direct integration](https://github.com/nathcymru/ha-metoffice-direct) and a configured Map Images precipitation order. It is a forecast, not live radar. The backend discovers valid frames, selects one consistent model run, enforces the shared API allowance and serves authenticated local images. Opening additional dashboards or playing the animation does not make more Met Office requests. No WMS endpoint or browser-visible API key is used.
 
 ## Development
 
