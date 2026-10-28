@@ -26,6 +26,7 @@ export interface SkyConfig {
   priority: string[];
   quality: "low" | "medium" | "high";
   lightning: boolean;
+  weatherCardSurface?: "solid" | "glass";
   alerts?: AlertSettings;
   themes: SkyTheme[];
 }

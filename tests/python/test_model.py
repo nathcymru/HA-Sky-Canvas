@@ -97,19 +97,70 @@ def test_invalid_settings_and_routes_fail_before_save():
     assert config["revision"] == 0
 
 
-def test_legacy_storage_adds_disabled_banners_without_changing_user_scenes():
+@pytest.mark.parametrize("had_alerts", [False, True])
+def test_legacy_storage_adds_only_known_defaults_without_changing_user_scenes(had_alerts):
     legacy = default_config("weather.metoffice_direct")
-    del legacy["alerts"]
+    del legacy["weatherCardSurface"]
+    if not had_alerts:
+        del legacy["alerts"]
+    else:
+        legacy["alerts"] = {
+            "enabled": True,
+            "weatherEntity": "sensor.warnings",
+            "floodEntity": None,
+        }
     legacy["revision"] = 23
     legacy["dashboards"] = ["dashboard-kiosk"]
     legacy["themes"][1]["enabled"] = False
+    legacy["themes"][0]["images"]["clear_day"] = "uploaded_" + "a" * 32
+    original = deepcopy(legacy)
     migrated = validate_config(legacy)
-    assert migrated["alerts"] == {"enabled": False, "weatherEntity": None, "floodEntity": None}
-    assert {key: value for key, value in migrated.items() if key != "alerts"} == legacy
-    assert "alerts" not in legacy
+    assert migrated["weatherCardSurface"] == "solid"
+    if not had_alerts:
+        assert migrated["alerts"] == {"enabled": False, "weatherEntity": None, "floodEntity": None}
+    assert {key: migrated[key] for key in legacy} == original
+    assert legacy == original
     del legacy["quality"]
     with pytest.raises(InvalidConfig):
         validate_config(legacy)
+
+
+def test_migration_rejects_unknown_or_unpublished_setting_shapes():
+    legacy = default_config("weather.metoffice_direct")
+    del legacy["weatherCardSurface"]
+    legacy["unexpected"] = True
+    with pytest.raises(InvalidConfig):
+        validate_config(legacy)
+    hybrid = default_config("weather.metoffice_direct")
+    del hybrid["alerts"]
+    with pytest.raises(InvalidConfig):
+        validate_config(hybrid)
+
+
+def test_weather_card_surface_changes_only_in_an_explicit_validated_save():
+    original = default_config("weather.metoffice_direct")
+    assert original["weatherCardSurface"] == "solid"
+    settings = {key: deepcopy(original[key]) for key in SETTING_KEYS}
+    settings["weatherCardSurface"] = "glass"
+    assert original["weatherCardSurface"] == "solid"
+    saved = apply_change(original, 0, "save_settings", settings)
+    assert saved["weatherCardSurface"] == "glass"
+    assert saved["revision"] == 1
+    assert saved["themes"] == original["themes"]
+    assert original["revision"] == 0
+    assert validate_config(saved) == saved
+    del settings["weatherCardSurface"]
+    with pytest.raises(InvalidConfig):
+        apply_change(saved, 1, "save_settings", settings)
+    assert saved["weatherCardSurface"] == "glass"
+
+
+@pytest.mark.parametrize("surface", [None, "", "frost", 0, {}, []])
+def test_invalid_weather_card_surface_is_rejected(surface):
+    config = default_config("weather.metoffice_direct")
+    config["weatherCardSurface"] = surface
+    with pytest.raises(InvalidConfig):
+        validate_config(config)
 
 
 @pytest.mark.parametrize("source", ["https://example.com", "weather.home", "sensor.a/../b", 3])

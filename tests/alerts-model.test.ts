@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { alertFingerprint, alertTime, floodAlerts, FLOOD_URL, weatherAlerts, WEATHER_URL } from "../src/alerts/model";
-import { ALERT_NOW, floodEntity, floodWarning, weatherEntity, weatherWarning } from "./alerts-fixtures";
+import { ALERT_NOW, floodEntity, floodWarning, noMatchingFloodAreas, weatherEntity, weatherWarning } from "./alerts-fixtures";
 
 describe("weather warning normalization", () => {
   it("preserves official levels and distinguishes issued upcoming warnings from active ones", () => {
@@ -117,15 +117,49 @@ describe("NRW flood warning normalization", () => {
     expect(floodAlerts(entity, ALERT_NOW).items[0].scope).toBe("All Wales");
   });
 
-  it("distinguishes recently verified outside-area coverage from an outage without inventing a clear state", () => {
-    const entity = floodEntity(); entity.state = "unavailable";
-    entity.attributes.scope = { type: "area_codes", label: "Home flood areas", area_codes: [], selection_method: "home_polygon", coverage_status: "outside_known_areas", resolved_at: new Date(ALERT_NOW).toISOString() };
-    const feed = floodAlerts(entity, ALERT_NOW);
-    expect(feed.status).toBe("unavailable");
-    expect(feed.notice).toContain("outside the published NRW warning areas");
-    expect(feed.notice).toContain("does not mean no flood risk");
-    expect(floodAlerts(entity, ALERT_NOW + 86_400_000).notice).toBeUndefined();
-    expect(floodAlerts(entity, ALERT_NOW - 120_000).notice).toBeUndefined();
+  it("hides a fresh successful empty home selection without making a flood-risk claim", () => {
+    const feed = floodAlerts(noMatchingFloodAreas(), ALERT_NOW);
+    expect(feed).toMatchObject({ status: "clear", items: [], scope: "Home flood areas" });
+    expect(feed.notice).toBeUndefined();
+  });
+
+  it("never interprets an empty home selection as a national warning selection", () => {
+    const entity = noMatchingFloodAreas();
+    entity.attributes.warnings = [floodWarning()];
+    expect(floodAlerts(entity, ALERT_NOW).status).toBe("unavailable");
+    entity.attributes.warnings = [];
+    entity.attributes.cleared_warnings = [floodWarning(4)];
+    expect(floodAlerts(entity, ALERT_NOW).status).toBe("unavailable");
+    entity.attributes.cleared_warnings = null;
+    expect(floodAlerts(entity, ALERT_NOW).status).toBe("unavailable");
+  });
+
+  it("requires current feed proof as well as successful empty area selection", () => {
+    const entity = noMatchingFloodAreas();
+    expect(floodAlerts(entity, ALERT_NOW + 30 * 60_000).status).toBe("stale");
+    delete entity.attributes.fetched_at;
+    expect(floodAlerts(entity, ALERT_NOW).status).toBe("unavailable");
+    for (const state of ["unavailable", "unknown", "flood_alert"]) {
+      expect(floodAlerts({ ...noMatchingFloodAreas(), state }, ALERT_NOW).status).toBe("unavailable");
+    }
+  });
+
+  it.each([
+    { coverage_status: "outside_known_areas" }, { coverage_status: "unknown" },
+    { coverage_status: "stale" }, { coverage_status: "current" },
+    { selection_method: "radius" }, { resolved_at: "2026-10-27T12:00:00Z" },
+    { resolved_at: "2026-10-28T12:02:00Z" }, { resolved_at: "2026-10-28T12:00:00" },
+  ])("does not clear an unverified or expired empty-area result: %j", patch => {
+    const entity = noMatchingFloodAreas();
+    entity.attributes.scope = { ...(entity.attributes.scope as object), ...patch };
+    expect(floodAlerts(entity, ALERT_NOW).status).toBe("unavailable");
+  });
+
+  it("keeps legacy unavailable primary data unavailable without restating the old coverage diagnosis", () => {
+    const entity = noMatchingFloodAreas(); entity.state = "unavailable";
+    entity.attributes.scope = { ...(entity.attributes.scope as object), coverage_status: "outside_known_areas" };
+    expect(floodAlerts(entity, ALERT_NOW)).toMatchObject({ status: "unavailable", items: [] });
+    expect(floodAlerts(entity, ALERT_NOW).notice).toBeUndefined();
   });
 
   it("does not truncate an explicit multi-area selection or the provider's bounded warning message", () => {

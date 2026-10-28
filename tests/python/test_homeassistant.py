@@ -1,6 +1,8 @@
 """Exercise HA's real authorization decorators and versioned storage implementation."""
 
 import asyncio
+import json
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
@@ -61,6 +63,43 @@ async def test_real_store_survives_reload_and_rejects_two_simultaneous_writers(t
         assert restored.config["weatherEntity"] == "weather.met_office"
         assert restored.config["revision"] == 1
         assert restored.config["themes"][1]["enabled"] is False
+    finally:
+        await hass.async_stop()
+
+
+@pytest.mark.asyncio
+async def test_legacy_appearance_default_does_not_write_until_explicit_save(tmp_path):
+    hass = HomeAssistant(str(tmp_path))
+    try:
+        store = SkyStore(hass)
+        await store.load("weather.met_office")
+        legacy = store.snapshot()
+        del legacy["weatherCardSurface"]
+        legacy["revision"] = 23
+        legacy["themes"][0]["images"]["clear_day"] = "christmas_clear_day"
+        await store.store.async_save(legacy)
+        path = Path(store.store.path)
+        original_bytes = path.read_bytes()
+
+        migrated = SkyStore(hass)
+        await migrated.load("weather.different_provider")
+        assert migrated.snapshot()["weatherCardSurface"] == "solid"
+        assert migrated.snapshot()["revision"] == 23
+        assert path.read_bytes() == original_bytes
+        settings = {
+            key: value
+            for key, value in migrated.snapshot().items()
+            if key not in ("revision", "themes")
+        }
+        settings["weatherCardSurface"] = "glass"
+        assert path.read_bytes() == original_bytes
+        await migrated.change(23, "save_settings", settings)
+        saved = json.loads(path.read_text())["data"]
+        assert saved["weatherCardSurface"] == "glass" and saved["revision"] == 24
+        assert saved["themes"] == legacy["themes"]
+        restored = SkyStore(hass)
+        await restored.load("weather.different_provider")
+        assert restored.snapshot() == saved
     finally:
         await hass.async_stop()
 

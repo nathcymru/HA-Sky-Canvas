@@ -22,3 +22,13 @@ export function floodEntity(severity = 3): HassEntity {
     warnings: severity === 0 ? [] : [floodWarning(severity)], cleared_warnings: [],
   } };
 }
+
+export function noMatchingFloodAreas(): HassEntity {
+  const entity = floodEntity(0);
+  entity.attributes.scope = {
+    type: "area_codes", label: "Home flood areas", area_codes: [],
+    selection_method: "home_polygon", coverage_status: "no_matching_areas",
+    resolved_at: new Date(ALERT_NOW).toISOString(),
+  };
+  return entity;
+}

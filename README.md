@@ -4,7 +4,7 @@ Weather and seasonal house scenes behind your Home Assistant dashboards. A local
 
 Default and Christmas house scenes are included so you can see it working immediately. Replace them with your own house, choose the dashboards where they appear, and schedule additional themes from the **Sky Canvas** settings page.
 
-Version 0.2.0 was checked on Home Assistant Core 2026.10.4 with live current/hourly/daily forecasts, dashboard banners, native Energy and Map, phone/tablet layouts, keyboard forecast scrolling and Light/Auto appearance. Refresh existing browser pages after updating. The original scene, upload, explicit-save and seasonal-setting checks remain the 0.1.0 baseline. The frontend adapter uses Home Assistant internals, so future frontend versions require compatibility checks.
+Version 0.3.0 fixes weather-card registration on fresh Home Assistant page loads and adds grid-sized Met Office cards with solid or glass backgrounds. Local validation passed 182 frontend tests, 76 Python tests, TypeScript and Ruff checks. Live checks on Home Assistant Core 2026.10.4 covered three fresh dashboard loads, compact phone layouts, forecast and map controls, the visual editor and saved appearance settings. See [validation and remaining acceptance checks](VALIDATION.md) for the recorded scope. The frontend adapter uses Home Assistant internals, so future frontend versions require compatibility checks.
 
 ![Sky Canvas theme settings with the bundled day and night house images](docs/settings-preview.jpg)
 
@@ -19,7 +19,7 @@ Theme settings shown in the local development preview with demonstration data an
 - Selected dashboards, initially Overview, or all Lovelace dashboards. Energy, Map and other non-dashboard panels retain their own presentation.
 - Explicit saves, with Save/Discard/Stay when changing tabs with edits. Separate browser sessions cannot silently overwrite a newer revision.
 - Reduced motion support, hidden-page animation pause and bounded rendering work for tablets. Lightning flashes are off by default.
-- Optional Met Office current, hourly and daily cards with all 30 official condition symbols, temperature colours, UV categories and explicit missing-data states.
+- Optional Met Office current, hourly and daily cards with nine grid presets, a visual editor, solid/glass backgrounds, all 30 official condition symbols, temperature colours, UV categories and explicit missing-data states.
 - Optional weather and flood warning banners across supported dashboards, independently of the decorative background selection. Each authority retains its own severity, scope and advice.
 
 Missing seasonal images fall back to the matching Default slot. Empty Default slots show no house. Rain and snow take precedence over the optional frost image. Unknown weather produces a neutral sky rather than pretending conditions are clear.
@@ -56,33 +56,65 @@ The [Met Office example](examples/README.md) supplies a Home Assistant package a
 
 The optional `custom:ha-sky-canvas-weather-card` uses the separate [Met Office Direct integration](https://github.com/nathcymru/ha-metoffice-direct). It preserves the provider's exact weather codes, including showers, drizzle, overcast and day/night variants. The 30 official SVGs are bundled locally in their original colours; viewing a card makes no image request to the Met Office.
 
-Register `/ha_sky_canvas/sky-canvas.js?v=0.2.0-2` as a **JavaScript Module** in **Settings → Dashboards → Resources** before adding either weather card or the forecast map. Use the same URL as the installed integration's frontend module. This ordinary Lovelace resource ensures a fresh direct dashboard load can discover the cards.
+Register `/ha_sky_canvas/sky-canvas.js?v=0.3.0-2` as a **JavaScript Module** in **Settings → Dashboards → Resources** before adding either weather card or the forecast map. Use the same URL as the installed integration's frontend module. This ordinary Lovelace resource ensures a fresh direct dashboard load can discover the cards.
 
 ```yaml
 type: custom:ha-sky-canvas-weather-card
 entity: weather.metoffice_direct
 mode: current
-compact: true
+layout: now
+surface: default
 title: Current weather
+grid_options:
+  columns: 6
+  rows: 2
 ```
 
-For forecasts, use `mode: hourly` or `mode: daily`; `limit` controls the number of visible periods. Hourly defaults to 48 and permits 1–72; daily defaults to 7 and permits 1–10. The provider may supply fewer periods. For example:
+For forecasts, use `mode: hourly` or `mode: daily`; `limit` controls the number of periods. Full hourly tables default to 48 periods, while compact forecast layouts default to 12; hourly limits permit 1–72. Daily defaults to 7 and permits 1–10. The provider may supply fewer periods. For example:
 
 ```yaml
 type: custom:ha-sky-canvas-weather-card
 entity: weather.metoffice_direct
 mode: hourly
+layout: forecast
 limit: 6
 title: Next six forecast periods
+grid_options:
+  columns: 12
+  rows: 6
 ```
 
-Current weather is labelled as a model estimate. Forecast tables include text descriptions, temperature, precipitation chance, wind, gust and UV; daily rows distinguish day weather/highs from the following night's weather/lows. Tables scroll horizontally on narrow screens and use Home Assistant's timezone and converted units. Missing measurements remain dashes, and unavailable or stale data does not become clear weather or zero rain. Daily provenance is separate from current/hourly provenance.
+Current weather uses the provider's model estimate. Forecast tables include text descriptions, temperature, precipitation chance, wind, gust and UV; daily table rows distinguish day weather/highs from the following night's weather/lows. Tables scroll horizontally on narrow screens and use Home Assistant's timezone and converted units. Missing measurements remain dashes, and unavailable or stale data does not become clear weather or zero precipitation. Daily provenance is separate from current/hourly provenance.
 
-Temperature backgrounds and UV categories follow the published Met Office palette and [forecast guide](https://weather.metoffice.gov.uk/guides/what-does-this-forecast-mean). Numeric values remain in your selected HA units; temperature colour selection uses the nearest Celsius degree, saturating outside the published -19°C to 40°C range. Black or white text provides at least 4.5:1 contrast against every included numeric-band background. UV labels accompany the colours, and gusts at 25 knots or 29 mph are bold. These are numeric-band checks, not an accessibility certification of an entire dashboard.
+Forecast temperature bands and UV categories follow the published Met Office palette and [forecast guide](https://weather.metoffice.gov.uk/guides/what-does-this-forecast-mean). Numeric values remain in your selected HA units; temperature colour selection uses the nearest Celsius degree, saturating outside the published -19°C to 40°C range. Black or white text provides at least 4.5:1 contrast against every included numeric-band background. UV labels accompany the colours, and gusts at 25 knots or 29 mph are bold. These are numeric-band checks, not an accessibility certification of an entire dashboard.
 
 The [Global Spot parameter glossary](https://datahub.metoffice.gov.uk/docs/glossary?sortOrder=ALPHABETICALLY&models=mo-spot-1hr) defines the API data periods. Hourly precipitation amount covers the **previous hour**, while precipitation chance covers the hour centred on the validity time. The supplied `windGustSpeed10m` is the maximum three-second mean during the preceding ten minutes; it is not the separate hourly maximum-gust parameter. Weather symbols combine conditions at the validity time with recent-period information. Daily precipitation chance covers local dawn to dusk, and the midday gust covers its preceding ten minutes. The card explains these API periods alongside the forecast; it does not apply the public forecast website's period-start convention to Global Spot data. Cards use Home Assistant's forecast subscription and the provider's existing data, so adding cards does not issue additional Met Office API requests.
 
 The [symbol manifest](custom_components/ha_sky_canvas/frontend/weather-icons/v1/manifest.json), [palette provenance](custom_components/ha_sky_canvas/frontend/weather-icons/v1/palette-source.json), [API timing provenance](custom_components/ha_sky_canvas/frontend/weather-icons/v1/data-periods-source.json) and [source/licence notes](custom_components/ha_sky_canvas/frontend/weather-icons/v1/SOURCE.md) record the original URLs, digests, colours and presentation adaptations.
+
+### Card sizes and appearance
+
+The visual card editor offers these Home Assistant section-grid presets. Selecting one updates its grid dimensions; the native Layout tab remains available.
+
+| Layout | Columns | Rows | Content |
+| --- | ---: | ---: | --- |
+| Glance | 3 | 1 | Symbol and rounded temperature |
+| Tile | 6 | 1 | Current temperature and condition |
+| Strip | 12 | 1 | Scrollable forecast periods |
+| Now | 6 | 2 | Current weather, precipitation chance and wind |
+| Column | 3 | 3 | Narrow current-weather panel |
+| Overview | 12 | 3 | Current weather and a short forecast |
+| Detail | 6 | 4 | Current weather and key measurements |
+| Forecast | 12 | 6 | Current weather and forecast periods |
+| Full table | 12 | Auto | All supplied forecast measurements |
+
+In **Sky Canvas → Settings → Weather card background**, choose **Solid · Met Office style** or **Glass · translucent background**, then **Save Changes**. The saved preference applies to weather and forecast-map cards across dashboards, independently of the scene selection. A weather card can override it using its visual editor's Background control (`surface: solid` or `surface: glass`); `surface: default` follows the shared setting. Glass respects the device's reduced-transparency preference.
+
+The blue panels, dark header and lime selection accents follow the supplied Met Office forecast-page reference. Data comes from Met Office Direct and symbols are the official bundled assets; HA Sky Canvas is a community application. Larger cards include expandable source and forecast-timing details. Small current cards open Home Assistant's weather details when selected. Compact **Chance** labels mean precipitation chance, including rain, snow or hail.
+
+Glance, Tile, Now, Column and Detail show current weather; selecting these layouts sets `mode: current`. Overview, Forecast and Strip can show hourly or daily periods; choosing `mode: current` for one of these combined layouts requests an hourly forecast. Use `layout: table` for the full forecast table. The Glance layout rounds its visible temperature to fit one grid cell; its accessible description retains the full value and unit.
+
+For a matching Weather dashboard, copy [`examples/met-office-forecast-theme.yaml`](examples/met-office-forecast-theme.yaml) into Home Assistant's themes directory, reload themes, and select **Sky Canvas Met Office** for the relevant views. [`examples/met-office-weather-dashboard.json`](examples/met-office-weather-dashboard.json) is a minimal example. Other dashboards retain their own themes.
 
 ## Weather and flood warning banners
 
@@ -90,7 +122,7 @@ In **Sky Canvas → Settings**, enable **Show warning banners across dashboards*
 
 Met Office weather warnings and **Natural Resources Wales flood warnings are separate authorities and feeds**. Weather colours preserve the provider's yellow/amber/red classification. NRW flood alert, flood warning and severe flood warning retain their distinct labels and action text; the two higher flood levels share NRW's published red. These rows use published website accent colours with original warning symbols, not agency logos or copied warning graphics.
 
-Each row identifies its source and affected area, distinguishes issued upcoming weather warnings from active warnings, and links to official advice. Regional weather fallback and Wales-wide flood coverage are explicit. A fresh empty feed hides its row; missing, stale or inconsistent data shows an unavailable/out-of-date message. An empty list does not establish that there is no weather or flood risk. Details support keyboard navigation, and updates do not move focus.
+Each row identifies its source and affected area, distinguishes issued upcoming weather warnings from active warnings, and links to official advice. Regional weather fallback and Wales-wide flood coverage are explicit. A fresh empty feed hides its row, including a successful exact-home selection with no matching NRW areas (NRW Flood Direct 0.1.1 or newer). Area selection is a separate diagnostic, not a persistent warning banner. Missing, stale or inconsistent data shows an unavailable/out-of-date message. An empty list does not establish that there is no weather or flood risk. Details support keyboard navigation, and updates do not move focus.
 
 The banners read existing Home Assistant entities and make no provider requests. [Implementation and colour provenance](src/alerts/README.md) document the supported data contract and bounded frontend compatibility. Official guidance: [Met Office warnings](https://weather.metoffice.gov.uk/guides/warnings) and [Natural Resources Wales flood advice](https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en).
 

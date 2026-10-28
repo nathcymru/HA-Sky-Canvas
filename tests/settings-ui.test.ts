@@ -188,6 +188,25 @@ describe("settings panel interaction", () => {
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
+  it("keeps weather card appearance in the draft until Save Changes and confirms leaving it", async () => {
+    await click("#tab-settings");
+    const select = query<HTMLSelectElement>("#weather-card-surface");
+    expect(select.value).toBe("solid");
+    select.value = "glass";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    await flush();
+    expect(calls.some(message => message.type === "ha_sky_canvas/save_settings")).toBe(false);
+    expect(config.weatherCardSurface).not.toBe("glass");
+    await click("#tab-default");
+    expect(query<HTMLDialogElement>("#unsaved-dialog").open).toBe(true);
+    await click("#unsaved-dialog .actions button:first-child");
+    expect(query<HTMLSelectElement>("#weather-card-surface").value).toBe("glass");
+    await click(".savebar .primary");
+    expect(calls.find(message => message.type === "ha_sky_canvas/save_settings")?.settings).toMatchObject({ weatherCardSurface: "glass" });
+    expect(config.weatherCardSurface).toBe("glass");
+    expect(query<HTMLButtonElement>(".savebar .primary").disabled).toBe(true);
+  });
+
   it("keeps a failed save visible in its tab and allows a retry without losing the edit", async () => {
     await click("#tab-christmas");
     await click("#theme-enabled");

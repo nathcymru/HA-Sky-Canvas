@@ -2,6 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HassEntity, HomeAssistant } from "../src/types";
 import { SkyCanvasWeatherCard } from "../src/weather/index";
+import { SkyCanvasWeatherEditor } from "../src/weather/editor";
+import { WEATHER_LAYOUTS, type WeatherCardConfig } from "../src/weather/config";
 
 const now = new Date("2026-10-28T12:30:00Z");
 const entity = (): HassEntity => ({ state: "rainy", attributes: {
@@ -24,7 +26,7 @@ beforeEach(() => {
   card = document.createElement("ha-sky-canvas-weather-card") as SkyCanvasWeatherCard;
   card.hass = { states: { "weather.metoffice_direct": entity(), "weather.other": entity() }, config: { time_zone: "Europe/London" }, callWS: vi.fn(), fetchWithAuth: vi.fn(), connection: { subscribeMessage: subscribe } };
 });
-afterEach(() => { card.remove(); vi.useRealTimers(); vi.restoreAllMocks(); });
+afterEach(() => { card.remove(); delete document.documentElement.dataset.skyWeatherSurface; vi.useRealTimers(); vi.restoreAllMocks(); });
 
 describe("official weather card", () => {
   it("renders current official local artwork, useful labels and zeros without subscribing or external requests", async () => {
@@ -184,5 +186,68 @@ describe("official weather card", () => {
     card.setConfig({ entity: "weather.metoffice_direct", title: '<img src=x onerror="alert(1)">' }); await mount();
     expect(root().querySelector("h2")!.textContent).toBe('<img src=x onerror="alert(1)">');
     expect(root().querySelector("h2 img")).toBeNull();
+  });
+  it("supplies nine meaningful native grid sizes and safely validates layout/background choices", () => {
+    for (const [layout, preset] of Object.entries(WEATHER_LAYOUTS)) {
+      card.setConfig({ entity: "weather.metoffice_direct", layout: layout as keyof typeof WEATHER_LAYOUTS });
+      expect(card.getGridOptions()).toMatchObject({ columns: preset.columns, rows: preset.rows });
+      expect(card.getCardSize()).toBe(preset.rows === "auto" ? 7 : preset.rows);
+    }
+    expect(() => card.setConfig({ entity: "weather.metoffice_direct", layout: "bogus" as never })).toThrow("layout");
+    expect(() => card.setConfig({ entity: "weather.metoffice_direct", surface: "bogus" as never })).toThrow("background");
+  });
+  it("uses existing settings for glass, responds to saved changes, and respects card overrides", async () => {
+    document.documentElement.dataset.skyWeatherSurface = "glass";
+    card.setConfig({ entity: "weather.metoffice_direct", surface: "default", layout: "now" }); await mount();
+    expect(root().querySelector("ha-card")?.classList.contains("glass")).toBe(true);
+    window.dispatchEvent(new CustomEvent("ha-sky-canvas-appearance", { detail: { weatherCardSurface: "solid" } })); await flush();
+    expect(root().querySelector("ha-card")?.classList.contains("solid")).toBe(true);
+    card.setConfig({ entity: "weather.metoffice_direct", surface: "glass", layout: "now" }); await flush();
+    window.dispatchEvent(new CustomEvent("ha-sky-canvas-appearance", { detail: { weatherCardSurface: "solid" } })); await flush();
+    expect(root().querySelector("ha-card")?.classList.contains("glass")).toBe(true);
+    expect(card.hass.callWS).not.toHaveBeenCalled(); expect(card.hass.fetchWithAuth).not.toHaveBeenCalled();
+  });
+  it("combines current conditions with a real forecast subscription for overview and keeps missing data explicit", async () => {
+    card.setConfig({ entity: "weather.metoffice_direct", mode: "current", layout: "overview" }); await mount();
+    expect(calls[0].request.forecast_type).toBe("hourly");
+    expect(root().querySelector(".temperature")?.textContent).toContain("0°C");
+    expect(root().textContent).toContain("Loading forecast");
+    calls[0].callback({ forecast: [period(), period(10, "2026-10-28T14:00:00Z")] }); await flush();
+    expect(root().querySelectorAll(".period")).toHaveLength(2);
+    expect(root().querySelector(".period time")?.getAttribute("datetime")).toBe("2026-10-28T13:00:00.000Z");
+    calls[0].callback({ forecast: null }); await flush();
+    expect(root().querySelectorAll(".period")).toHaveLength(0);
+    expect(root().querySelector(".temperature")?.textContent).toContain("0°C");
+    expect(root().textContent).toContain("Forecast unavailable");
+  });
+  it("keeps current-only YAML layouts coherent even when an old forecast mode remains", async () => {
+    card.hass.states["weather.metoffice_direct"]!.attributes.metoffice_daily_model_run = "2026-10-27T00:00:00Z";
+    card.setConfig({ entity: "weather.metoffice_direct", mode: "daily", layout: "glance" }); await mount();
+    expect(root().querySelector(".temperature")?.textContent).toBe("0°");
+    expect(root().querySelector(".current-action")?.getAttribute("aria-label")).toContain("0°C");
+    expect(subscribe).not.toHaveBeenCalled();
+    expect(root().textContent).not.toContain("Loading forecast");
+    card.hass.states["weather.metoffice_direct"]!.attributes.current_time = "2026-10-27T00:00:00Z";
+    card.hass = { ...card.hass }; await flush();
+    expect(root().querySelector(".temperature")).toBeNull();
+    expect(root().textContent).toContain("Weather out of date");
+  });
+  it("publishes editor changes without saving independently, preserves custom config and resets the native grid for a preset", async () => {
+    const editor = SkyCanvasWeatherCard.getConfigElement() as SkyCanvasWeatherEditor;
+    editor.hass = card.hass;
+    editor.setConfig({ type: "custom:ha-sky-canvas-weather-card", entity: "weather.metoffice_direct", mode: "hourly", limit: 48, visibility: [{ condition: "screen", media_query: "(min-width: 300px)" }], grid_options: { columns: 24, rows: "auto" } });
+    document.body.append(editor); await editor.updateComplete;
+    const changed = vi.fn(); editor.addEventListener("config-changed", changed);
+    const selects = editor.shadowRoot!.querySelectorAll("select");
+    selects[1].value = "tile"; selects[1].dispatchEvent(new Event("change")); await editor.updateComplete;
+    const next = (changed.mock.calls[0][0] as CustomEvent<{ config: WeatherCardConfig }>).detail.config;
+    expect(next).toMatchObject({ mode: "current", layout: "tile", grid_options: { columns: 6, rows: 1 }, visibility: [{ condition: "screen", media_query: "(min-width: 300px)" }] });
+    expect(selects[2].disabled).toBe(true);
+    selects[1].value = "forecast"; selects[1].dispatchEvent(new Event("change")); await editor.updateComplete;
+    expect(selects[2].disabled).toBe(false);
+    selects[2].value = "daily"; selects[2].dispatchEvent(new Event("change")); await editor.updateComplete;
+    expect((changed.mock.calls[2][0] as CustomEvent<{ config: WeatherCardConfig }>).detail.config.limit).toBe(7);
+    expect(card.hass.callWS).not.toHaveBeenCalled();
+    editor.remove();
   });
 });

@@ -6,10 +6,14 @@ interface MapConfig { entity: string; title?: string; }
 
 /** Ordinary Lovelace card; the provider owns all remote requests and credentials. */
 export class SkyCanvasForecastMap extends LitElement {
-  static properties = { hass: { attribute: false }, config: { state: true }, index: { state: true }, playing: { state: true }, loaded: { state: true }, failed: { state: true } };
+  static properties = { hass: { attribute: false }, config: { state: true }, index: { state: true }, playing: { state: true }, loaded: { state: true }, failed: { state: true }, globalSurface: { state: true } };
   static styles = css`
-    :host{display:block}ha-card{display:block;overflow:hidden;color:var(--primary-text-color);background:var(--ha-card-background,var(--card-background-color));border-radius:var(--ha-card-border-radius,12px)}
-    header{padding:20px 20px 12px}h2{font-size:20px;line-height:1.3;font-weight:500;margin:0 0 6px}p{margin:0;line-height:1.5}.sub,.meta{color:var(--secondary-text-color);font-size:13px}.map{position:relative;display:grid;place-items:center;min-height:220px;background:#162a3c;aspect-ratio:4/3;overflow:hidden}.map img{display:block;width:100%;height:100%;object-fit:contain;position:absolute;inset:0}.empty{padding:32px;text-align:center;color:#e5edf5;max-width:34em}.controls{padding:16px 20px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}button{min-height:44px;min-width:44px;padding:8px 12px;border:1px solid var(--divider-color,#68788b);border-radius:9px;background:transparent;color:inherit;font:inherit;cursor:pointer}button:disabled{opacity:.45;cursor:default}button:focus-visible,input:focus-visible{outline:3px solid var(--primary-color,#78b5ff);outline-offset:3px}.play{background:var(--primary-color,#2675c4);color:var(--text-primary-color,#fff);border-color:transparent;min-width:90px}input{width:100%;min-height:44px;accent-color:var(--primary-color)}.timestamp{font-size:15px;margin:10px 0 4px;font-variant-numeric:tabular-nums}.notice{padding:10px 20px;background:var(--warning-color,#f4b942);color:#1d2630;font-size:13px}.meta{padding:0 20px 18px;display:grid;gap:6px}a{color:var(--primary-color,#78b5ff)}.frame-count{margin-left:auto;font-size:13px;color:var(--secondary-text-color)}
+    :host{display:block;min-width:0;--mo-blue:#147bbe;--mo-panel:#114465;--mo-bar:#1d1d1d;--mo-lime:#c4e90c;font-family:var(--ha-font-family,Arial,sans-serif);font-variant-numeric:tabular-nums}
+    ha-card{display:block;overflow:hidden;color:#fff;background:var(--mo-blue);border:1px solid rgba(255,255,255,.15);border-radius:var(--ha-card-border-radius,6px)}ha-card.glass{background:rgba(17,68,101,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+    .brand-bar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 16px;background:var(--mo-bar);font-size:12px;line-height:1.4}.brand{font-weight:700;color:var(--mo-lime)}.source{color:#e3edf3}
+    header{padding:20px 20px 12px}h2{font-size:20px;line-height:1.3;font-weight:600;margin:0 0 6px}p{margin:0;line-height:1.5}.sub,.meta{color:#e3edf3;font-size:13px}.map{position:relative;display:grid;place-items:center;min-height:220px;background:var(--mo-panel);aspect-ratio:4/3;overflow:hidden}.map img{display:block;width:100%;height:100%;object-fit:contain;position:absolute;inset:0}.empty{padding:32px;text-align:center;color:#e5edf5;max-width:34em}.controls{padding:16px 20px;background:var(--mo-panel)}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}button{min-height:44px;min-width:44px;padding:8px 12px;border:1px solid #9ab3c4;border-radius:6px;background:transparent;color:inherit;font:inherit;cursor:pointer}button:disabled{opacity:.45;cursor:default}button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--mo-lime);outline-offset:3px}.play{background:var(--mo-lime);color:#1d1d1d;border-color:transparent;min-width:90px;font-weight:650}input{width:100%;min-height:44px;accent-color:var(--mo-lime)}.timestamp{font-size:15px;margin:10px 0 4px}.notice{padding:10px 20px;background:#f4b942;color:#1d2630;font-size:13px}.meta{padding:16px 20px 18px;display:grid;gap:6px}a{color:#fff;text-underline-offset:3px}.frame-count{margin-left:auto;font-size:13px;color:#e3edf3}
+    @media(max-width:390px){header{padding:16px 16px 12px}.controls{padding:12px 16px}.meta{padding:12px 16px 16px}.brand-bar{padding:8px 12px}.brand-bar .source{font-size:11px}.frame-count{flex-basis:100%;margin-left:0}.empty{padding:24px}}
+    @media(prefers-reduced-transparency:reduce){ha-card.glass{background:var(--mo-panel);backdrop-filter:none;-webkit-backdrop-filter:none}}
   `;
   declare hass: HomeAssistant;
   private config: MapConfig = { entity: "sensor.metoffice_direct_forecast_map" };
@@ -26,6 +30,11 @@ export class SkyCanvasForecastMap extends LitElement {
   private motion?: MediaQueryList;
   private visibility = () => { if (document.hidden) this.stop(); };
   private motionChanged = () => { if (this.motion?.matches) this.stop(); };
+  private globalSurface: "solid" | "glass" = "solid";
+  private appearance = (event?: Event): void => {
+    const detail = (event as CustomEvent<{ weatherCardSurface?: unknown }> | undefined)?.detail;
+    this.globalSurface = (detail?.weatherCardSurface ?? document.documentElement.dataset.skyWeatherSurface) === "glass" ? "glass" : "solid";
+  };
 
   setConfig(config: Partial<MapConfig>): void {
     if (config.entity !== undefined && !/^sensor\.[a-z0-9_]+$/.test(config.entity)) throw new Error("Choose a Met Office forecast map sensor.");
@@ -33,8 +42,10 @@ export class SkyCanvasForecastMap extends LitElement {
   }
   static getStubConfig(): MapConfig { return { entity: "sensor.metoffice_direct_forecast_map" }; }
   getCardSize(): number { return 7; }
+  getGridOptions() { return { columns: 12, rows: "auto", min_columns: 6, min_rows: 1 }; }
   connectedCallback(): void {
     super.connectedCallback();
+    this.appearance();window.addEventListener("ha-sky-canvas-appearance", this.appearance);
     document.addEventListener("visibilitychange", this.visibility);
     this.motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     this.motion.addEventListener("change", this.motionChanged);
@@ -43,6 +54,7 @@ export class SkyCanvasForecastMap extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.stop();this.controller?.abort();this.generation++;
+    window.removeEventListener("ha-sky-canvas-appearance", this.appearance);
     document.removeEventListener("visibilitychange", this.visibility);
     this.motion?.removeEventListener("change", this.motionChanged);
     this.clearImages();this.requested = "";this.controller = undefined;
@@ -119,7 +131,8 @@ export class SkyCanvasForecastMap extends LitElement {
     const frame = model?.frames[Math.min(this.index, model.frames.length - 1)];
     const url = frame ? this.urls.get(frame.id) : undefined;
     const zone = this.hass?.config.time_zone ?? "UTC";
-    return html`<ha-card>
+    return html`<ha-card class=${this.globalSurface}>
+      <div class="brand-bar"><span class="brand">Met Office</span><span class="source">Forecast maps · Sky Canvas</span></div>
       <header><h2>${this.config.title ?? "Precipitation forecast"}</h2><p class="sub">Met Office · ${model?.region ?? "Waiting for forecast maps"}</p></header>
       ${model?.stale ? html`<p class="notice" role="status">This forecast is out of date. Playback is paused while fresh data is unavailable.</p>` : nothing}
       <div class="map">${url && frame ? html`<img src=${url} alt=${`Met Office precipitation forecast for ${forecastTime(frame.valid_time, zone)}`} @error=${() => this.failedImage(frame.id, url)}>` : html`<p class="empty" role="status">${!model ? "Forecast maps are unavailable. No current forecast can be inferred." : this.failed && this.loaded + this.failed >= model.frames.length ? "This forecast frame could not be loaded." : "Loading forecast map…"}</p>`}</div>

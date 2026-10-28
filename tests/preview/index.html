@@ -33,6 +33,8 @@
   const app=document.querySelector('home-assistant');app.hass=hass;
   function shadow(parent,tag){const element=document.createElement(tag);parent.attachShadow({mode:'open'}).append(element);return element;}
   const main=shadow(app,'home-assistant-main');const panel=shadow(main,'ha-panel-lovelace');const root=shadow(panel,'hui-root');const view=shadow(root,'hui-view-container');view.id='view';const background=document.createElement('hui-view-background');background.style.cssText='position:fixed;inset:0;display:block;z-index:-1';background.attachShadow({mode:'open'});view.append(background);
+  // The standalone fixture supplies the HA readiness boundary used in production.
+  customElements.define('home-assistant',class extends HTMLElement {});
   await import('/custom_components/ha_sky_canvas/frontend/sky-canvas.js');
   let settings;
   document.querySelector('#settings').onclick=()=>{if(settings){settings.remove();settings=undefined;document.querySelector('#cards').hidden=false;return;}settings=document.createElement('ha-sky-canvas-settings');settings.hass=hass;document.body.append(settings);document.querySelector('#cards').hidden=true;};

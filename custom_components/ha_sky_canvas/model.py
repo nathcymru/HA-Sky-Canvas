@@ -19,6 +19,7 @@ SETTING_KEYS = {
     "priority",
     "quality",
     "lightning",
+    "weatherCardSurface",
     "alerts",
 }
 
@@ -58,6 +59,7 @@ def default_config(weather_entity: str) -> dict[str, Any]:
         "priority": list(BUILTIN_NAMES)[1:],
         "quality": "medium",
         "lightning": False,
+        "weatherCardSurface": "solid",
         "alerts": {"enabled": False, "weatherEntity": None, "floodEntity": None},
         "themes": themes,
     }
@@ -144,6 +146,11 @@ def validate_settings(settings: Any, theme_ids: set[str]) -> dict[str, Any]:
         raise InvalidConfig("Frost input must be a boolean or binary sensor")
     _boolean(result["applyToAll"], "Apply to all")
     _boolean(result["lightning"], "Lightning")
+    if not isinstance(result["weatherCardSurface"], str) or result["weatherCardSurface"] not in {
+        "solid",
+        "glass",
+    }:
+        raise InvalidConfig("Weather card appearance must be solid or glass")
     alerts = result["alerts"]
     if not isinstance(alerts, dict) or set(alerts) != {"enabled", "weatherEntity", "floodEntity"}:
         raise InvalidConfig("Invalid warning banner settings")
@@ -179,16 +186,18 @@ def validate_settings(settings: Any, theme_ids: set[str]) -> dict[str, Any]:
 
 def validate_config(config: Any) -> dict[str, Any]:
     """Reject corrupt or incompatible persisted data without silently overwriting it."""
-    # Version 0.1.0 had no banner preferences. Add only this known missing field;
-    # retain every user scene and revision, and reject all other corrupt shapes.
-    if isinstance(config, dict) and set(config) == (SETTING_KEYS - {"alerts"}) | {
-        "revision",
-        "themes",
-    }:
-        config = {
-            **config,
-            "alerts": {"enabled": False, "weatherEntity": None, "floodEntity": None},
-        }
+    # Migrate only the two published legacy shapes. Missing unrelated fields or
+    # unexpected fields are corrupt, not a request to reset user preferences.
+    legacy_keys = (SETTING_KEYS - {"alerts", "weatherCardSurface"}) | {"revision", "themes"}
+    if isinstance(config, dict):
+        if set(config) == legacy_keys:
+            config = {
+                **config,
+                "alerts": {"enabled": False, "weatherEntity": None, "floodEntity": None},
+                "weatherCardSurface": "solid",
+            }
+        elif set(config) == legacy_keys | {"alerts"}:
+            config = {**config, "weatherCardSurface": "solid"}
     if not isinstance(config, dict) or set(config) != SETTING_KEYS | {"revision", "themes"}:
         raise InvalidConfig("Invalid stored configuration")
     if type(config["revision"]) is not int or config["revision"] < 0:

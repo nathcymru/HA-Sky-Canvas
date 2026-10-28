@@ -36,6 +36,16 @@ export function bootstrapSkyCanvas(): RendererHandle {
   let originalOpacity: { value: string; priority: string } | null = null;
   let warned = false;
   let failedAt = 0;
+  let weatherCardSurface: "solid" | "glass" | null = null;
+
+  const publishAppearance = (): void => {
+    if (!config) return;
+    const next = config.weatherCardSurface === "glass" ? "glass" : "solid";
+    if (next === weatherCardSurface) return;
+    weatherCardSurface = next;
+    document.documentElement.dataset.skyWeatherSurface = next;
+    window.dispatchEvent(new CustomEvent("ha-sky-canvas-appearance", { detail: { weatherCardSurface: next } }));
+  };
 
   const unmount = (): void => {
     scene?.destroy();
@@ -99,7 +109,10 @@ export function bootstrapSkyCanvas(): RendererHandle {
   };
 
   const refresh = (): void => {
-    if (disposed || document.hidden) return;
+    if (disposed) return;
+    // Saved appearance applies to cards even when this dashboard has no scene.
+    publishAppearance();
+    if (document.hidden) return;
     const hass = document.querySelector<HassRoot>("home-assistant")?.hass;
     // Warnings apply to every supported dashboard/view independently of whether
     // the decorative scene is selected. A missing HA session clears the banner.
@@ -164,6 +177,11 @@ export function bootstrapSkyCanvas(): RendererHandle {
       document.removeEventListener("visibilitychange", refresh);
       alerts.destroy();
       unmount();
+      if (weatherCardSurface !== null && document.documentElement.dataset.skyWeatherSurface === weatherCardSurface) {
+        delete document.documentElement.dataset.skyWeatherSurface;
+        if (weatherCardSurface === "glass") window.dispatchEvent(new CustomEvent("ha-sky-canvas-appearance", { detail: { weatherCardSurface: "solid" } }));
+      }
+      weatherCardSurface = null;
     },
   };
   window.addEventListener("location-changed", refresh);

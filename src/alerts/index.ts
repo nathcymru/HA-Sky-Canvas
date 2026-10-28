@@ -1,7 +1,6 @@
 import type { HomeAssistant, SkyConfig } from "../types";
 import { SkyCanvasWeatherAlerts } from "./banner";
 import { floodAlerts, weatherAlerts } from "./model";
-import { FloodCoverageResolver } from "./coverage";
 
 export interface WeatherAlertsHandle {
   update(config: Pick<SkyConfig, "alerts"> | null, hass: HomeAssistant | null): void;
@@ -37,24 +36,22 @@ export function createWeatherAlerts(options: WeatherAlertsOptions = {}): Weather
   let disposed = false;
   let currentConfig: Pick<SkyConfig, "alerts"> | null = null;
   let currentHass: HomeAssistant | null = null;
-  const coverage = new FloodCoverageResolver(render, now);
   function render(): void {
     if (disposed) return;
     const settings = currentConfig?.alerts, hass = currentHass;
     if (!hass || !settings?.enabled || (!settings.weatherEntity && !settings.floodEntity)) {
-      coverage.reset(); element?.remove(); element = null; return;
+      element?.remove(); element = null; return;
     }
-    const companion = coverage.update(settings.floodEntity, hass);
     const host = resolveHost();
     if (!host?.isConnected) { element?.remove(); return; }
-    // Entity state is always rendered as text. The existing renderer owns the
-    // connection; only the cached companion identity uses a read-only HA lookup.
+    // Only the primary warning entity establishes current feed availability.
+    // A geometry diagnostic cannot clear an unavailable or stale warning feed.
     element ??= document.createElement("ha-sky-canvas-weather-alerts") as SkyCanvasWeatherAlerts;
     const clock = now();
     element.timeZone = hass.config.time_zone;
     element.feeds = [
       ...(settings.weatherEntity ? [weatherAlerts(hass.states[settings.weatherEntity], clock)] : []),
-      ...(settings.floodEntity ? [floodAlerts(hass.states[settings.floodEntity], clock, companion)] : []),
+      ...(settings.floodEntity ? [floodAlerts(hass.states[settings.floodEntity], clock)] : []),
     ];
     if (element.parentElement !== host) host.prepend(element);
   }
@@ -63,7 +60,7 @@ export function createWeatherAlerts(options: WeatherAlertsOptions = {}): Weather
       if (disposed) return;
       currentConfig = config; currentHass = hass; render();
     },
-    destroy(): void { disposed = true; coverage.destroy(); currentConfig = null; currentHass = null; element?.remove(); element = null; },
+    destroy(): void { disposed = true; currentConfig = null; currentHass = null; element?.remove(); element = null; },
   };
 }
 

@@ -27,17 +27,14 @@ null. Additional panel adapters require live DOM verification before use.
   `fetched_at`, `stale_after_seconds`, and explicit `scope`. Maximum age 30 minutes.
   Severity 1 is severe, 2 warning, 3 alert. Cleared severity 4 is not active.
   Individual message dates never imply expiry; a fresh feed controls removal.
-  A current home-polygon result outside the published areas gets an explicit
-  coverage explanation, never a clear/no-risk state. Coverage metadata expires
-  after its own daily refresh interval; an old offline result is not restated as
-  a current location fact. Home Assistant omits attributes when the primary
-  warning sensor is unavailable, so a cached read-only entity-registry lookup
-  resolves the integration's coverage diagnostic by platform, unique ID and
-  matching config entry. This supports renamed sensors without guessing names.
-  A connection/selection gets one lookup and at most one recovery after a
-  60-second cooldown if it fails or the companion disappears. Late responses
-  after a connection/selection change or teardown cannot update the banner.
-  The companion supplies only the coverage explanation, never a clear state.
+  NRW Direct 0.1.1 reports a successfully resolved home selection with no matched
+  polygons as `no_matching_areas`. A fresh primary warning state `none`, empty
+  active/cleared lists and a current successful selection hide the flood row.
+  This is a no-matching-warning result, not a claim about flood risk. Geometry
+  diagnostics stay in the integration; they do not create persistent banners.
+  Legacy 0.1.0 unavailable primary states remain unavailable. Companion geometry
+  data never substitutes for current feed proof, and no entity-registry lookup
+  or extra provider polling is needed.
 - A fresh empty list hides the relevant row. Missing, stale, malformed or
   inconsistent data produces an explicit unavailable/out-of-date row, never a
   reassuring zero. No claim is made that an empty warning list means no risk.

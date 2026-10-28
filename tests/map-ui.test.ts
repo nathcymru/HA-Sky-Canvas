@@ -35,10 +35,25 @@ beforeEach(async () => {
   card = document.createElement("ha-sky-canvas-forecast-map") as SkyCanvasForecastMap;
   card.hass = { states: { "sensor.metoffice_direct_forecast_map": entity() }, config: { time_zone: "Europe/London" }, callWS: vi.fn(), fetchWithAuth: fetcher };
 });
-afterEach(() => { card.remove(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => { card.remove(); delete document.documentElement.dataset.skyWeatherSurface; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 async function mount() { document.body.append(card); await flush(); }
 
 describe("authenticated forecast map card", () => {
+  it("uses the shared surface preference without refetching maps, and fits the native full-width grid", async () => {
+    document.documentElement.dataset.skyWeatherSurface = "glass";
+    await mount();
+    expect(root().querySelector("ha-card")?.classList.contains("glass")).toBe(true);
+    expect(card.getGridOptions()).toEqual({ columns: 12, rows: "auto", min_columns: 6, min_rows: 1 });
+    const requests = fetcher.mock.calls.length;
+    window.dispatchEvent(new CustomEvent("ha-sky-canvas-appearance", { detail: { weatherCardSurface: "solid" } }));
+    await flush();
+    expect(root().querySelector("ha-card")?.classList.contains("solid")).toBe(true);
+    expect(fetcher).toHaveBeenCalledTimes(requests);
+    const removed = vi.spyOn(window, "removeEventListener");
+    card.remove();
+    expect(removed.mock.calls.some(([name]) => name === "ha-sky-canvas-appearance")).toBe(true);
+  });
+
   it("requests only opaque local cache URLs, loads with bounded concurrency and never autoplays", async () => {
     const pending: ((response: Response) => void)[] = [];
     fetcher.mockImplementation(() => new Promise(resolve => { pending.push(resolve); }));

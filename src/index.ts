@@ -1,10 +1,6 @@
-import "./settings/index";
-import "./map/index";
-import "./weather/index";
-import { bootstrapSkyCanvas, type RendererHandle } from "./renderer/index";
-
-// Different resource query strings create separate module instances. Keep one
-// renderer lifecycle per page even when both HA and Lovelace load the bundle.
-const rendererKey = Symbol.for("ha-sky-canvas.renderer");
-const page = window as unknown as { [key: symbol]: RendererHandle | undefined };
-page[rendererKey] ??= bootstrapSkyCanvas();
+// HA installs its scoped custom-element registry before defining home-assistant.
+// Extra modules can run earlier, so even importing Lit/components must wait:
+// definitions made in the original native registry are invisible after replacement.
+await customElements.whenDefined("home-assistant");
+await import("./main");
+export {};

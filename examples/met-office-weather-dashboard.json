@@ -1,0 +1,46 @@
+{
+  "title": "Met Office Weather",
+  "views": [
+    {
+      "title": "Forecast",
+      "path": "forecast",
+      "type": "sections",
+      "max_columns": 2,
+      "theme": "Sky Canvas Met Office",
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "custom:ha-sky-canvas-weather-card",
+              "entity": "weather.metoffice_direct",
+              "layout": "overview",
+              "mode": "current",
+              "surface": "default",
+              "grid_options": {
+                "columns": 12,
+                "rows": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "custom:ha-sky-canvas-weather-card",
+              "entity": "weather.metoffice_direct",
+              "layout": "forecast",
+              "mode": "hourly",
+              "limit": 6,
+              "grid_options": {
+                "columns": 12,
+                "rows": 6
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
