@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Sky Canvas",
+        "description": "Choose your existing weather provider. Manage house images, seasonal themes and dashboard selection in the Sky Canvas sidebar.",
+        "data": {"weather_entity": "Weather"}
+      }
+    },
+    "error": {"weather_missing": "Select an existing weather entity."},
+    "abort": {"already_configured": "Sky Canvas is already configured. Open its sidebar to change settings."}
+  }
+}

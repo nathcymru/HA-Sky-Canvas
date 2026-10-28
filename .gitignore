@@ -6,7 +6,6 @@
 node_modules/
 .npm/
 .yarn/
-package-lock.json
 yarn.lock
 
 # 2. Build & Compilation Outputs
@@ -42,3 +41,10 @@ secrets.yaml
 Thumbs.db
 .env
 .env.local
+.venv/
+.ha-venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/

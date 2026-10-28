@@ -1,0 +1,455 @@
+import { TIME_THRESHOLDS } from './constants';
+import type { TimeOfDay, Position, PositionOverride, BackgroundGradient, SunMoonData, HassEntity, HomeAssistant } from './types';
+
+/**
+ * Determine time of day and its progress (internal fallback)
+ */
+function getTimeOfDay(): TimeOfDay {
+  const now = new Date();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const totalMinutes = hour * 60 + minute;
+
+  // Sunrise: 6:00 - 8:00 (120 minutes)
+  if (totalMinutes >= TIME_THRESHOLDS.SUNRISE_START && totalMinutes < TIME_THRESHOLDS.SUNRISE_END) {
+    const progress = (totalMinutes - TIME_THRESHOLDS.SUNRISE_START) / 120;
+    return { type: 'sunrise', progress };
+  }
+
+  // Day: 8:00 - 18:00
+  if (totalMinutes >= TIME_THRESHOLDS.SUNRISE_END && totalMinutes < TIME_THRESHOLDS.DAY_END) {
+    const progress = (totalMinutes - TIME_THRESHOLDS.SUNRISE_END) / 600;
+    return { type: 'day', progress };
+  }
+
+  // Sunset: 18:00 - 20:00 (120 minutes)
+  if (totalMinutes >= TIME_THRESHOLDS.DAY_END && totalMinutes < TIME_THRESHOLDS.SUNSET_END) {
+    const progress = (totalMinutes - TIME_THRESHOLDS.DAY_END) / 120;
+    return { type: 'sunset', progress };
+  }
+
+  // Night
+  return { type: 'night', progress: 0 };
+}
+
+/**
+ * Get sun/moon position based on time of day
+ */
+function getAutoSunPosition(timeOfDay: TimeOfDay, width: number, height: number): Position {
+  if (timeOfDay.type === 'sunrise') {
+    const progress = timeOfDay.progress;
+    return {
+      x: width * (0.3 + progress * 0.4),
+      y: height * (0.85 - progress * 0.55)
+    };
+  } else if (timeOfDay.type === 'sunset') {
+    const progress = timeOfDay.progress;
+    return {
+      x: width * (0.5 + progress * 0.3),
+      y: height * (0.3 + progress * 0.55)
+    };
+  } else if (timeOfDay.type === 'day') {
+    const progress = timeOfDay.progress;
+    const angle = progress * Math.PI;
+    return {
+      x: width * (0.5 + Math.sin(angle) * 0.25),
+      y: height * (0.25 - Math.sin(angle) * 0.1)
+    };
+  } else {
+    // Night: moon position
+    return {
+      x: width * 0.75,
+      y: height * 0.3
+    };
+  }
+}
+
+/**
+ * Get sun/moon position, optionally pinned by a user override (percent of width/height)
+ */
+export function getSunPosition(
+  timeOfDay: TimeOfDay,
+  width: number,
+  height: number,
+  override?: PositionOverride
+): Position {
+  const position = getAutoSunPosition(timeOfDay, width, height);
+  const toFraction = (percent: number): number => Math.min(100, Math.max(0, percent)) / 100;
+
+  if (typeof override?.x === 'number') {
+    position.x = width * toFraction(override.x);
+  }
+  if (typeof override?.y === 'number') {
+    position.y = height * toFraction(override.y);
+  }
+  return position;
+}
+
+/**
+ * Get background gradient colors for sunrise/sunset
+ */
+export function getBackgroundGradient(timeOfDay: TimeOfDay): BackgroundGradient | null {
+  if (timeOfDay.type === 'sunrise') {
+    const progress = timeOfDay.progress;
+    const nightStart = { r: 26, g: 26, b: 46 };
+    const dayStart = { r: 255, g: 160, b: 122 };
+    const dayEnd = { r: 255, g: 215, b: 0 };
+
+    return {
+      start: {
+        r: Math.round(nightStart.r + (dayStart.r - nightStart.r) * progress),
+        g: Math.round(nightStart.g + (dayStart.g - nightStart.g) * progress),
+        b: Math.round(nightStart.b + (dayStart.b - nightStart.b) * progress)
+      },
+      end: {
+        r: Math.round(nightStart.r + (dayEnd.r - nightStart.r) * progress),
+        g: Math.round(nightStart.g + (dayEnd.g - nightStart.g) * progress),
+        b: Math.round(nightStart.b + (dayEnd.b - nightStart.b) * progress)
+      }
+    };
+  } else if (timeOfDay.type === 'sunset') {
+    const progress = timeOfDay.progress;
+    const dayStart = { r: 255, g: 107, b: 107 };
+    const dayEnd = { r: 255, g: 160, b: 122 };
+    const nightStart = { r: 26, g: 26, b: 46 };
+
+    return {
+      start: {
+        r: Math.round(dayStart.r + (nightStart.r - dayStart.r) * progress),
+        g: Math.round(dayStart.g + (nightStart.g - dayStart.g) * progress),
+        b: Math.round(dayStart.b + (nightStart.b - dayStart.b) * progress)
+      },
+      end: {
+        r: Math.round(dayEnd.r + (nightStart.r - dayEnd.r) * progress),
+        g: Math.round(dayEnd.g + (nightStart.g - dayEnd.g) * progress),
+        b: Math.round(dayEnd.b + (nightStart.b - dayEnd.b) * progress)
+      }
+    };
+  }
+  return null;
+}
+
+/**
+ * Format forecast time as HH:00 (24h) or H AM/PM (12h)
+ */
+export function formatForecastTime(datetime: string, format: '12h' | '24h' = '24h', am = 'AM', pm = 'PM'): string {
+  if (!datetime) return '';
+  const date = new Date(datetime);
+  const hours = date.getHours();
+  if (format === '12h') {
+    const h = hours % 12 || 12;
+    const period = hours < 12 ? am : pm;
+    return `${h} ${period}`;
+  }
+  return `${hours.toString().padStart(2, '0')}:00`;
+}
+
+/**
+ * For each forecast entry, whether it is the first one of a new calendar day (local time).
+ * The first entry only is when it is already past today (e.g. the forecast starts at midnight).
+ */
+export function getDayStarts(forecast: Array<{ datetime: string }>, now: Date = new Date()): boolean[] {
+  let previous = now.toDateString();
+  return forecast.map(item => {
+    const day = new Date(item.datetime).toDateString();
+    const starts = day !== previous;
+    previous = day;
+    return starts;
+  });
+}
+
+/**
+ * Format forecast date as a short weekday + day/month label.
+ */
+export function formatForecastDay(datetime: string, locale?: string): string {
+  if (!datetime) return '';
+  const date = new Date(datetime);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(locale || undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short'
+  });
+}
+
+/**
+ * Format time as HH:MM or HH:MM AM/PM
+ */
+export function formatTime(datetime: Date | string, format: '12h' | '24h' = '24h', amText = 'AM', pmText = 'PM'): string {
+  if (!datetime) return '';
+  const date = typeof datetime === 'string' ? new Date(datetime) : datetime;
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+
+  if (format === '12h') {
+    const period = hours >= 12 ? pmText : amText;
+    hours = hours % 12 || 12; // Convert 0 to 12 for 12-hour format
+    return `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
+  } else {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  }
+}
+
+/**
+ * Get sunrise and sunset data from weather entity or separate sensors
+ */
+export function getSunriseSunsetData(
+  weatherState: HassEntity,
+  sunriseEntity: string | null = null,
+  sunsetEntity: string | null = null,
+  hass: HomeAssistant | null = null
+): SunMoonData & { hasSunData: boolean } {
+  let sunrise: Date | null = null;
+  let sunset: Date | null = null;
+
+  // Try to get from separate sensors first (if configured)
+  if (sunriseEntity && hass && hass.states[sunriseEntity]) {
+    const sunriseState = hass.states[sunriseEntity];
+    sunrise = new Date(sunriseState.state);
+  }
+
+  if (sunsetEntity && hass && hass.states[sunsetEntity]) {
+    const sunsetState = hass.states[sunsetEntity];
+    sunset = new Date(sunsetState.state);
+  }
+
+  // If not found in separate sensors, try weather entity attributes
+  if (!sunrise || !sunset) {
+    if (weatherState && weatherState.attributes) {
+      const attrs = weatherState.attributes;
+
+      if (!sunrise && (attrs.forecast_sunrise || attrs.sunrise)) {
+        sunrise = new Date(attrs.forecast_sunrise as string || attrs.sunrise as string);
+      }
+
+      if (!sunset && (attrs.forecast_sunset || attrs.sunset)) {
+        sunset = new Date(attrs.forecast_sunset as string || attrs.sunset as string);
+      }
+    }
+  }
+
+  // If still no sun data, try default sun.sun entity from Home Assistant
+  if ((!sunrise || !sunset) && hass && hass.states['sun.sun']) {
+    const sunEntity = hass.states['sun.sun'];
+    const sunAttrs = sunEntity.attributes;
+
+    if (!sunrise && sunAttrs.next_rising) {
+      sunrise = new Date(sunAttrs.next_rising as string);
+    }
+
+    if (!sunset && sunAttrs.next_setting) {
+      sunset = new Date(sunAttrs.next_setting as string);
+    }
+  }
+
+  return {
+    sunrise,
+    sunset,
+    hasSunData: !!(sunrise && sunset)
+  };
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+// Sunrise/sunset visual phase lasts from 1 hour before to 1 hour after the event
+const TWILIGHT_WINDOW_MS = HOUR_MS;
+
+/**
+ * Shift a sun event by whole days to its latest occurrence at or before `now`.
+ * Sources report today's, yesterday's or the *next* event (e.g. sun.sun next_rising),
+ * so only the time of day is reliable.
+ */
+function latestOccurrence(event: number, now: number): number {
+  return event + Math.floor((now - event) / DAY_MS) * DAY_MS;
+}
+
+/**
+ * Determine time of day based on sunrise/sunset or fallback to static times
+ */
+export function getTimeOfDayWithSunData(
+  sunData: SunMoonData & { hasSunData: boolean },
+  now: Date = new Date()
+): TimeOfDay {
+  // If we have real sun data, use it
+  if (sunData.hasSunData && sunData.sunrise && sunData.sunset) {
+    const currentTime = now.getTime();
+    const lastSunrise = latestOccurrence(sunData.sunrise.getTime(), currentTime);
+    const lastSunset = latestOccurrence(sunData.sunset.getTime(), currentTime);
+    const sunIsUp = lastSunrise > lastSunset;
+
+    if (sunIsUp) {
+      const nextSunset = lastSunset + DAY_MS;
+
+      // Second half of the sunrise window
+      if (currentTime < lastSunrise + TWILIGHT_WINDOW_MS) {
+        return { type: 'sunrise', progress: (currentTime - (lastSunrise - TWILIGHT_WINDOW_MS)) / (2 * TWILIGHT_WINDOW_MS) };
+      }
+      // First half of the sunset window
+      if (currentTime >= nextSunset - TWILIGHT_WINDOW_MS) {
+        return { type: 'sunset', progress: (currentTime - (nextSunset - TWILIGHT_WINDOW_MS)) / (2 * TWILIGHT_WINDOW_MS) };
+      }
+      const dayStart = lastSunrise + TWILIGHT_WINDOW_MS;
+      const dayEnd = nextSunset - TWILIGHT_WINDOW_MS;
+      return { type: 'day', progress: (currentTime - dayStart) / (dayEnd - dayStart) };
+    }
+
+    const nextSunrise = lastSunrise + DAY_MS;
+
+    // Second half of the sunset window
+    if (currentTime < lastSunset + TWILIGHT_WINDOW_MS) {
+      return { type: 'sunset', progress: (currentTime - (lastSunset - TWILIGHT_WINDOW_MS)) / (2 * TWILIGHT_WINDOW_MS) };
+    }
+    // First half of the sunrise window
+    if (currentTime >= nextSunrise - TWILIGHT_WINDOW_MS) {
+      return { type: 'sunrise', progress: (currentTime - (nextSunrise - TWILIGHT_WINDOW_MS)) / (2 * TWILIGHT_WINDOW_MS) };
+    }
+    return { type: 'night', progress: 0 };
+  }
+
+  // Fallback to static time-based calculation
+  return getTimeOfDay();
+}
+
+// Speed units in m/s, keyed by the unit with non-letters stripped ("km/h" -> "kmh")
+const SPEED_UNITS_IN_MS: Record<string, number> = {
+  ms: 1,
+  mps: 1,
+  kmh: 1 / 3.6,
+  kmph: 1 / 3.6,
+  mph: 0.44704,
+  kn: 0.514444,
+  kt: 0.514444,
+  kts: 0.514444,
+  knots: 0.514444,
+  fts: 0.3048
+};
+
+/**
+ * Convert a speed between units (m/s, km/h, mph, kn, ft/s). Unknown units return the value unchanged.
+ */
+export function convertSpeedUnit(value: number, fromUnit: string, toUnit: string): number {
+  const normalize = (unit: string): string => unit.toLowerCase().replace(/[^a-z]/g, '');
+  const from = SPEED_UNITS_IN_MS[normalize(fromUnit)];
+  const to = SPEED_UNITS_IN_MS[normalize(toUnit)];
+  if (!from || !to || from === to) return value;
+  return (value * from) / to;
+}
+
+/** Wind unit setting: 'auto' shows wind in the unit it comes in, the others convert to that unit */
+export type WindUnitSetting = 'auto' | 'ms' | 'kmh' | 'mph' | 'kn';
+
+export const WIND_UNIT_SETTINGS: readonly WindUnitSetting[] = ['auto', 'ms', 'kmh', 'mph', 'kn'];
+
+const SETTING_UNITS: Record<Exclude<WindUnitSetting, 'auto'>, string> = { ms: 'm/s', kmh: 'km/h', mph: 'mph', kn: 'kn' };
+
+const normalizeSpeedUnit = (unit: string): string => unit.toLowerCase().replace(/[^a-z]/g, '');
+
+/**
+ * The unit wind is shown in: the chosen one, or with 'auto' the unit the values come in.
+ * Integrations that report no unit give m/s.
+ */
+export function windDisplayUnit(sourceUnit: string | null | undefined, setting: WindUnitSetting = 'auto'): string {
+  if (setting !== 'auto' && SETTING_UNITS[setting]) return SETTING_UNITS[setting];
+  return sourceUnit || 'm/s';
+}
+
+/** Whole numbers for km/h, mph and knots; one decimal for m/s and ft/s */
+export function roundWindSpeed(value: number, unit: string): number {
+  return ['kmh', 'kmph', 'mph', 'kn', 'kt', 'kts', 'knots'].includes(normalizeSpeedUnit(unit))
+    ? Math.round(value)
+    : Math.round(value * 10) / 10;
+}
+
+/**
+ * A wind speed in the display unit. `attrs.wind_speed_unit` is the unit the value comes in
+ * (none: m/s, for legacy integrations).
+ */
+export function convertWindSpeed(
+  speed: number | null,
+  attrs: { wind_speed_unit?: string },
+  setting: WindUnitSetting = 'auto'
+): number | null {
+  if (speed == null) return null;
+  const from = attrs.wind_speed_unit || 'm/s';
+  const to = windDisplayUnit(from, setting);
+  return roundWindSpeed(convertSpeedUnit(speed, from, to), to);
+}
+
+/** Translated label of a speed unit; unknown units are shown as they are */
+export function windUnitLabel(unit: string, t: (key: string) => string): string {
+  const normalized = normalizeSpeedUnit(unit);
+  if (normalized === 'kmh' || normalized === 'kmph') return t('wind_unit_kmh');
+  if (normalized === 'ms' || normalized === 'mps') return t('wind_unit_ms');
+  if (normalized === 'mph') return t('wind_unit_mph');
+  if (['kn', 'kt', 'kts', 'knots'].includes(normalized)) return t('wind_unit_knots');
+  if (normalized === 'fts' || normalized === 'ftps') return t('wind_unit_fts');
+  return unit;
+}
+
+/**
+ * Label of the display unit for wind that comes in `attrs.wind_speed_unit`
+ */
+export function getWindSpeedUnit(
+  attrs: { wind_speed_unit?: string },
+  setting: WindUnitSetting,
+  t: (key: string) => string
+): string {
+  return windUnitLabel(windDisplayUnit(attrs.wind_speed_unit || 'm/s', setting), t);
+}
+
+/**
+ * Format the current date for display, localized to the card language (e.g. "Wed, September 30")
+ */
+export function formatDate(date: Date, lang: string): string {
+  const options: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'long' };
+  try {
+    return date.toLocaleDateString(lang, options);
+  } catch {
+    return date.toLocaleDateString(undefined, options);
+  }
+}
+
+/**
+ * Format current time for clock display
+ */
+export function formatClockTime(
+  date: Date,
+  format: '12h' | '24h',
+  amLabel: string,
+  pmLabel: string
+): string {
+  if (format === '12h') {
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const period = hours >= 12 ? pmLabel : amLabel;
+    hours = hours % 12 || 12;
+    return `${hours}:${minutes} ${period}`;
+  } else {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+}
+
+/**
+ * Setup horizontal scroll with mouse wheel for containers
+ * Returns cleanup function to remove event listener
+ */
+export function setupHorizontalScroll(
+  root: ShadowRoot | null,
+  selector: string
+): (() => void) | null {
+  const element = root?.querySelector(selector) as HTMLElement | null;
+  if (!element) return null;
+
+  const handler = (e: Event) => {
+    const wheelEvent = e as WheelEvent;
+    if (wheelEvent.deltaY !== 0) {
+      e.preventDefault();
+      element.scrollLeft += wheelEvent.deltaY;
+    }
+  };
+  element.addEventListener('wheel', handler, { passive: false });
+
+  return () => element.removeEventListener('wheel', handler);
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sky Canvas local visual fixture</title>
+<style>
+  :root{color-scheme:dark;--primary-background-color:#111827;--card-background-color:#202b3a;--primary-text-color:#f8fafc;--secondary-text-color:#bbc7d5;--primary-color:#78b5ff;--divider-color:#445163;font:16px system-ui}
+  body{margin:0;color:var(--primary-text-color);background:var(--primary-background-color)}main[hidden]{display:none}
+  header{position:relative;z-index:2;display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:16px;background:#111827e8}
+  button,select{font:inherit;min-height:44px;border-radius:8px;border:1px solid #718096;padding:6px 12px;color:inherit;background:#253248}
+  label{display:flex;gap:6px;align-items:center}main{position:relative;z-index:1;margin:32px;max-width:800px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;pointer-events:none}
+  article{background:#172033c9;padding:24px;border:1px solid #ffffff25;border-radius:18px;backdrop-filter:blur(8px)}h1{font-size:18px;margin:0 auto 0 0}h2{font-size:17px;margin:0 0 12px}.metric{font-size:32px}p{line-height:1.5;color:#c7d3e6}ha-sky-canvas-settings{position:relative;z-index:4;background:var(--primary-background-color);min-height:100vh}
+  @media(max-width:500px){main{margin:16px;gap:12px}article{padding:16px}.metric{font-size:24px}}
+</style>
+<header><h1>Local visual fixture</h1><label>Weather <select id="weather"><option>sunny</option><option>clear-night</option><option>cloudy</option><option>rainy</option><option>snowy</option><option>fog</option><option>lightning-rainy</option></select></label><label>Scene <select id="season"><option value="default">Default</option><option value="christmas">Christmas</option></select></label><button id="settings">Open settings</button></header>
+<home-assistant></home-assistant>
+<main id="cards"><article><h2>Home</h2><span class="metric">Preview</span><p>Synthetic dashboard cards for local layout review.</p></article><article><h2>Weather</h2><span class="metric" id="condition">Sunny</span><p>Bundled house artwork and locally drawn animations.</p></article></main>
+<script type="module">
+  const slots=['clear_day','clear_night','rain_day','rain_night','frost_day','frost_night','snow_day','snow_night'];
+  let config={revision:0,weatherEntity:'weather.preview',frostEntity:null,applyToAll:true,dashboards:['dashboard-overview'],priority:['christmas','halloween','easter','rugby','soccer'],quality:'medium',lightning:false,themes:['default','christmas','halloween','easter','rugby','soccer'].map(id=>({id,name:id[0].toUpperCase()+id.slice(1),enabled:id==='default'||id==='christmas',schedule:id==='default'?null:{start:'12-01',end:'01-05',annual:true},images:Object.fromEntries(slots.map(slot=>[slot,['default','christmas'].includes(id)?`${id}_${slot}`:null]))}))};
+  const callbacks=new Set();
+  const hass={states:{'weather.preview':{state:'sunny',attributes:{temperature:12,temperature_unit:'°C'}},'sun.sun':{state:'above_horizon',attributes:{}}},config:{time_zone:'Europe/London'},user:{is_admin:true},panels:{'dashboard-overview':{component_name:'lovelace',title:'Overview'}},
+    async callWS(message){
+      if(message.type==='lovelace/dashboards/list')return[{url_path:'dashboard-overview',title:'Overview'},{url_path:'dashboard-weather',title:'Weather'},{url_path:'dashboard-kiosk',title:'Kiosk'}];
+      if(message.type==='ha_sky_canvas/save_theme'){if(message.revision!==config.revision)throw new Error('Configuration changed');const index=config.themes.findIndex(t=>t.id===message.theme.id);if(index<0){config.themes.push(structuredClone(message.theme));config.priority.push(message.theme.id)}else config.themes[index]=structuredClone(message.theme);config.revision++;}
+      if(message.type==='ha_sky_canvas/save_settings'){if(message.revision!==config.revision)throw new Error('Configuration changed');config={...config,...structuredClone(message.settings),revision:config.revision+1};}
+      if(message.type.startsWith('ha_sky_canvas/save_'))callbacks.forEach(cb=>cb(structuredClone(config)));
+      return structuredClone(config);
+    },
+    fetchWithAuth(path,options){const id=path.split('/').pop().split('?')[0];const [theme,...slot]=id.split('_');return fetch(`/custom_components/ha_sky_canvas/images/${theme}/${slot.join('_')}.png`,options);},
+    connection:{async subscribeMessage(callback){callbacks.add(callback);return()=>callbacks.delete(callback);}}
+  };
+  const app=document.querySelector('home-assistant');app.hass=hass;
+  function shadow(parent,tag){const element=document.createElement(tag);parent.attachShadow({mode:'open'}).append(element);return element;}
+  const main=shadow(app,'home-assistant-main');const panel=shadow(main,'ha-panel-lovelace');const root=shadow(panel,'hui-root');const view=shadow(root,'hui-view-container');view.id='view';const background=document.createElement('hui-view-background');background.style.cssText='position:fixed;inset:0;display:block;z-index:-1';background.attachShadow({mode:'open'});view.append(background);
+  await import('/custom_components/ha_sky_canvas/frontend/sky-canvas.js');
+  let settings;
+  document.querySelector('#settings').onclick=()=>{if(settings){settings.remove();settings=undefined;document.querySelector('#cards').hidden=false;return;}settings=document.createElement('ha-sky-canvas-settings');settings.hass=hass;document.body.append(settings);document.querySelector('#cards').hidden=true;};
+  document.querySelector('#weather').onchange=event=>{hass.states['weather.preview'].state=event.target.value;hass.states['sun.sun'].state=event.target.value==='clear-night'?'below_horizon':'above_horizon';document.querySelector('#condition').textContent=event.target.value;window.dispatchEvent(new Event('location-changed'));};
+  document.querySelector('#season').onchange=event=>{const christmas=config.themes.find(t=>t.id==='christmas');christmas.schedule={start:'01-01',end:'12-31',annual:true};christmas.enabled=event.target.value==='christmas';config.revision++;callbacks.forEach(cb=>cb(structuredClone(config)));};
+</script>
+</html>

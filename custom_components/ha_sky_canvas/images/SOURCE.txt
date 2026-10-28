@@ -1,0 +1,15 @@
+HOME ASSISTANT BUNGALOW WALLPAPERS — BATCH 1 + 2
+
+16 PNG files arranged into two folders. Every image is 1920 x 1080 (16:9), RGBA with transparent background support.
+
+Naming: pair_<NN>_<condition>_<day|night>.png
+For example, pair_03_frost_day.png and pair_03_frost_night.png form a matching pair.
+
+Batch 01: clear, rain, frost, snow, each day and night.
+Batch 02: Christmas versions of clear, rain, frost, snow, each day and night.
+
+SOURCE AND CANVAS HANDLING
+The image-generation service produced each asset at 1672 x 941. For easier Home Assistant use, the images in this archive have all been resampled to exactly 1920 x 1080 with the same transformation; aspect-ratio correction is less than 0.1%. Transparency is retained. An exact single blue opaque pixel has been placed at the extreme top-right corner of each day canvas, and an exact single black opaque pixel at the same corner of each night canvas. Only the original indicator/dust pixels in the empty top portion were cleared.
+
+IMPORTANT LIMITATION
+This ZIP preserves the previously generated scenes. Canvas standardisation cannot remedy any architectural differences, decoration drift, or imperfect day/night pixel alignment in the AI-generated source images. The images were not rebuilt from a common 3D source model.

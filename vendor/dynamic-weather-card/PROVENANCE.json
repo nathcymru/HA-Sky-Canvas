@@ -1,0 +1,120 @@
+{
+  "repository": "https://github.com/teuchezh/dynamic-weather-card",
+  "tag": "v2026.10.2",
+  "tree": "ba94129ae8c09bb2fb43e4be881279453cd047b2",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "src/animations/aurora.ts",
+      "git_blob_sha": "31c369ec3d0367b83600483821e3d5d4a74fffab"
+    },
+    {
+      "path": "src/animations/base.ts",
+      "git_blob_sha": "01d75564ee044bf17f713baea1a31f1c50d17dd6"
+    },
+    {
+      "path": "src/animations/classic/foggy.ts",
+      "git_blob_sha": "1bd8fc5b3171ea332f885dcc957b8184770a8404"
+    },
+    {
+      "path": "src/animations/classic/hail.ts",
+      "git_blob_sha": "58d28477bd7806a8460a12dcf230e92cba31dfff"
+    },
+    {
+      "path": "src/animations/classic/index.ts",
+      "git_blob_sha": "ef1f71ac9e3af53116cb939e43b6657cf4a79765"
+    },
+    {
+      "path": "src/animations/classic/rainy.ts",
+      "git_blob_sha": "41acc0d31a24da588c781ffdc130d5fe40c6a4f6"
+    },
+    {
+      "path": "src/animations/classic/snowy.ts",
+      "git_blob_sha": "5dcd11bbf45bde61830480d85a89179b516454dd"
+    },
+    {
+      "path": "src/animations/classic/sunny.ts",
+      "git_blob_sha": "c2ee728bc3dc2f559cf76419a4b8785581838cc4"
+    },
+    {
+      "path": "src/animations/classic/thunderstorm.ts",
+      "git_blob_sha": "bf8b254f37e4463893bd587dd82a888509721374"
+    },
+    {
+      "path": "src/animations/clouds.ts",
+      "git_blob_sha": "0a0aa784f3aa517c14d023f2b805c9261a45fdd4"
+    },
+    {
+      "path": "src/animations/cloudy.ts",
+      "git_blob_sha": "a142dbf07d92c80a8b182a8ea3f3c6dddad6aa2f"
+    },
+    {
+      "path": "src/animations/foggy.ts",
+      "git_blob_sha": "6865dd125c7fc556d460430eddd25b5774021a2f"
+    },
+    {
+      "path": "src/animations/glass-drops.ts",
+      "git_blob_sha": "289fdc17493abe3ad9e8e71afd6e98b5852af0c3"
+    },
+    {
+      "path": "src/animations/hail.ts",
+      "git_blob_sha": "af78e62d406105565a819171af7ea77e5a374d99"
+    },
+    {
+      "path": "src/animations/night-sky.ts",
+      "git_blob_sha": "9331b92d6d559002e8b8db94dfec32818c64bc65"
+    },
+    {
+      "path": "src/animations/quality.ts",
+      "git_blob_sha": "92c553573dd282a4e0a27862b3c8396ab57ea52e"
+    },
+    {
+      "path": "src/animations/rainy.ts",
+      "git_blob_sha": "ef2509c5a780f192e198e42d590f0ff51e15e74a"
+    },
+    {
+      "path": "src/animations/snowy.ts",
+      "git_blob_sha": "2c3deb1e043bacffa5c1927546cb1e2400e20624"
+    },
+    {
+      "path": "src/animations/sunny.ts",
+      "git_blob_sha": "988e8be0ba0302cc543eae72c50f98a33a28d6c5"
+    },
+    {
+      "path": "src/animations/thunderstorm.ts",
+      "git_blob_sha": "6039b1d91ff04341efccb89ac42cc1b6cd2dca10"
+    },
+    {
+      "path": "src/animations/wind.ts",
+      "git_blob_sha": "f226321af535707b112c393ff496314293b71d7c"
+    },
+    {
+      "path": "LICENSE",
+      "git_blob_sha": "a5dfff597ae117fc5f8392d8ee9c55f4b4b14b77"
+    },
+    {
+      "path": "src/sky.ts",
+      "git_blob_sha": "86090a01fd99c34bce71ec2894d1c6cbfcd78004"
+    },
+    {
+      "path": "src/types.ts",
+      "git_blob_sha": "ba4c5620db296b4fec55a3015756343b296da5da"
+    },
+    {
+      "path": "src/utils.ts",
+      "git_blob_sha": "5c99ccbc0ddb4422b314ea3c009a42fddc617a01"
+    },
+    {
+      "path": "src/constants.ts",
+      "git_blob_sha": "f5bb1ca0ed9c265fc2e3fe0a739d60596c0fbea7"
+    },
+    {
+      "path": "src/components/animation-manager.ts",
+      "git_blob_sha": "f21760ae08867090e51698cbfc3aaa539c0def92"
+    },
+    {
+      "path": "src/components/styles.ts",
+      "git_blob_sha": "27ca9d34f6000af5f255de285e122a4f0dcceebc"
+    }
+  ]
+}

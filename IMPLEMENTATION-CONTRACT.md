@@ -1,0 +1,19 @@
+# Shared implementation contract
+
+Work in progress. No live installation or release yet. The user selected a separate direct Met Office API integration and removed supplemental providers from scope. Frost uses the final clear-night/Magnus rule below.
+
+- HACS integration domain `ha_sky_canvas`; all runtime Python, JS and bundled images inside `custom_components/ha_sky_canvas`.
+- TypeScript data contract: `src/types.ts`. Runtime config uses the same camelCase keys. Dates use ISO YYYY-MM-DD for one-off schedules and MM-DD for annual schedules; end dates inclusive in HA timezone.
+- GET via authenticated websocket `ha_sky_canvas/config` returns `SkyConfig` directly. Subscribe `ha_sky_canvas/subscribe` emits complete config after successful mutations. Admin checks on all writes.
+- `ha_sky_canvas/save_theme`: `{revision, theme}` changes just one theme, returns full config. Can create custom themes using a generated `custom_...` ID. Default fixed and always enabled; six built-in tabs cannot be deleted.
+- `ha_sky_canvas/delete_theme`: `{revision, theme_id}` only custom tabs; full config return. `id` is reserved by the websocket protocol.
+- `ha_sky_canvas/save_settings`: `{revision, settings}` with global fields weatherEntity,frostEntity,applyToAll,dashboards,priority,quality,lightning. Full config return. Revisions conflict rather than overwrite another browser's changes.
+- POST `/api/ha_sky_canvas/upload`: admin multipart field `file`; returns `{id}`. Does not apply image to any live tab until Save. Cleanup abandoned uploads after expiry.
+- GET `/api/ha_sky_canvas/image/{id}` authenticated; optional query `thumbnail=1`. Read via hass.fetchWithAuth then Blob URL. Bundled IDs `default_clear_day` etc and `christmas_clear_day` etc. Eight slots per theme. All bundled images also public as repository assets by user's explicit choice.
+- HA custom panel tag `ha-sky-canvas-settings`; module `/ha_sky_canvas/sky-canvas.js`; panel requires administrator. Same module exports renderer bootstrap and custom element.
+- Theme precedence follows config.priority, highest first. Missing active-theme slot falls back to Default matching slot. Empty Default means no house image, not an invented image. Current weather unknown must not be interpreted as sunny.
+- Scene uses three decorative layers below interactive controls; sky, image, transparent weather effects. Route only explicitly selected Lovelace dashboards (or all Lovelace dashboards when enabled); do not alter other panels. Disable harmlessly if expected dashboard DOM unavailable. Clean up listeners, animation frames, blob URLs and observers.
+- Defaults: applyToAll=false, dashboards=[dashboard-overview], frostEntity=null while pending rule, quality=medium, lightning=false, weatherEntity chosen during setup. Christmas enabled annually Dec1-Jan5 inclusive. Halloween,Easter,Rugby,Soccer empty/disabled. Settings tab appears for dashboard list only when applyToAll=false. Per-tab drafts, explicit Save, Save/Discard/Stay navigation dialog.
+- Renderer consumes optional current frost boolean only; predicted warning never drives the image. Final rule: temperature <=4 C, wind <8 km/h, clear-night, and temperature-minus-Magnus-dew-point <=3 C using same-hour RH. No invented cloud percentage. YAML example keeps predicted/current flags separate, uses actual sunset-to-sunrise window, rejects missing/stale inputs, and expires the dawn display at sunrise+2h or when daytime T>4 C AND dew point>2 C. Expiry is not proof of frost-free ground. Weather entity and units come from live integration data.
+- Respect prefers-reduced-motion (static scene), visibility pause, resize, one monotonic RAF clock, bounded pixels and particles. Rain/snow image priority over frost must be documented/tested.
+- Preserve entire upstream 21-file animation snapshot with MIT notice, pinned revision and checksums; production refactor stays in src/renderer. Do not copy unrelated card UI.

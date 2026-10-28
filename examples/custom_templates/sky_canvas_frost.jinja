@@ -1,0 +1,68 @@
+{# Estimated radiative frost risk, not an observation of frozen ground. #}
+{% macro metrics(temperature, humidity, wind, temperature_unit, wind_unit, condition, returns) -%}
+  {% set ns = namespace(valid=false, temperature=none, dew_point=none, wind=none, risk=none) %}
+  {% if is_number(temperature) and is_number(humidity) and is_number(wind) %}
+    {% set t = temperature | float %}
+    {% set rh = humidity | float %}
+    {% set w = wind | float %}
+    {% if temperature_unit == '°F' %}{% set t = (t - 32) * 5 / 9 %}
+    {% elif temperature_unit == 'K' %}{% set t = t - 273.15 %}{% endif %}
+    {% if wind_unit == 'mph' %}{% set w = w * 1.609344 %}
+    {% elif wind_unit == 'm/s' %}{% set w = w * 3.6 %}
+    {% elif wind_unit == 'kn' %}{% set w = w * 1.852 %}{% endif %}
+    {# Remove binary floating point conversion noise at the exact unit boundary. #}
+    {% set t = t | round(9) %}{% set w = w | round(9) %}
+    {% set conditions = ['clear-night', 'sunny', 'cloudy', 'partlycloudy', 'fog', 'rainy',
+       'pouring', 'snowy', 'snowy-rainy', 'hail', 'lightning', 'lightning-rainy',
+       'windy', 'windy-variant'] %}
+    {% if temperature_unit in ['°C', '°F', 'K'] and wind_unit in ['km/h', 'mph', 'm/s', 'kn']
+          and -80 <= t <= 60 and 0 < rh <= 100 and 0 <= w <= 500 and condition in conditions %}
+      {% set alpha = (17.27 * t) / (237.7 + t) + log(rh / 100) %}
+      {% set dew = (237.7 * alpha) / (17.27 - alpha) %}
+      {% set ns.valid = true %}
+      {% set ns.temperature = t %}{% set ns.dew_point = dew %}{% set ns.wind = w %}
+      {% set ns.risk = t <= 4 and w < 8 and condition == 'clear-night' and t - dew <= 3 %}
+    {% endif %}
+  {% endif %}
+  {% do returns(dict(valid=ns.valid, temperature=ns.temperature, dew_point=ns.dew_point,
+       wind=ns.wind, risk=ns.risk)) %}
+{%- endmacro %}
+
+{% macro fresh(current_time, model_run, fetched_at, now_timestamp, returns) -%}
+  {% set current = as_timestamp(current_time, none) %}
+  {% set model = as_timestamp(model_run, none) %}
+  {% set fetched = as_timestamp(fetched_at, none) %}
+  {% do returns(current is not none and model is not none and fetched is not none
+       and -300 <= now_timestamp - current <= 5400
+       and -300 <= now_timestamp - model <= 21600
+       and -300 <= now_timestamp - fetched <= 5400) %}
+{%- endmacro %}
+
+{% macro night_assessment(rows, start, end, temperature_unit, wind_unit, returns) -%}
+  {% set evaluate = metrics | as_function %}
+  {% set ns = namespace(risk=false, invalid=false, times=[], first_risk=none, gaps=false) %}
+  {% if start is number and end is number and 0 < end - start <= 86400 and rows is iterable and rows is not string and rows is not mapping %}
+    {% for row in rows if row is mapping %}
+      {% set stamp = as_timestamp(row.get('datetime'), none) %}
+      {% if stamp is not none and start < stamp + 3600 and stamp < end %}
+        {% set result = evaluate(row.get('temperature'), row.get('humidity'), row.get('wind_speed'),
+             temperature_unit, wind_unit, row.get('condition')) %}
+        {% if result.valid %}
+          {% set ns.times = ns.times + [stamp] %}
+          {% if result.risk %}
+            {% set ns.risk = true %}
+            {% if ns.first_risk is none or stamp < ns.first_risk %}{% set ns.first_risk = stamp %}{% endif %}
+          {% endif %}
+        {% else %}{% set ns.invalid = true %}{% endif %}
+      {% endif %}
+    {% endfor %}
+    {% set times = ns.times | unique | sort %}
+    {% for stamp in times %}
+      {% if not loop.first and stamp - times[loop.index0 - 1] > 3600 %}{% set ns.gaps = true %}{% endif %}
+    {% endfor %}
+    {% set covered = times | length > 0 and times[0] <= start
+         and end - times[-1] <= 3600 and not ns.gaps and not ns.invalid %}
+    {% do returns(dict(status='risk' if ns.risk else ('not_indicated' if covered else 'unknown'),
+         first_risk=ns.first_risk, valid_hours=times | length)) %}
+  {% else %}{% do returns(dict(status='unknown', first_risk=none, valid_hours=0)) %}{% endif %}
+{%- endmacro %}

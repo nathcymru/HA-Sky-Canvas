@@ -1,0 +1,200 @@
+# Install the companion custom_templates/sky_canvas_frost.jinja before this package.
+# This example uses the direct provider's verified entity ID and timestamp contract.
+# Adjust every weather.metoffice_direct reference if HA assigned another entity ID.
+input_boolean:
+  frost_warning:
+    name: Frost warning
+    icon: mdi:snowflake-alert
+  sky_canvas_frost_current:
+    name: Sky Canvas current frost display
+    icon: mdi:snowflake
+
+input_datetime:
+  sky_canvas_frost_display_expires:
+    name: Sky Canvas frost display expires
+    has_date: true
+    has_time: true
+
+input_select:
+  sky_canvas_overnight_frost:
+    name: Sky Canvas overnight frost assessment
+    options: [unknown, risk, not_indicated, expired]
+
+template:
+  - sensor:
+      - name: Sky Canvas frost conditions
+        unique_id: sky_canvas_frost_conditions
+        icon: mdi:snowflake-thermometer
+        state: >-
+          {% from 'sky_canvas_frost.jinja' import metrics, fresh %}
+          {% set evaluate = metrics | as_function %}
+          {% set recent = fresh | as_function %}
+          {% set e = 'weather.metoffice_direct' %}
+          {% set result = evaluate(state_attr(e, 'temperature'), state_attr(e, 'humidity'),
+              state_attr(e, 'wind_speed'), state_attr(e, 'temperature_unit'),
+              state_attr(e, 'wind_speed_unit'), states(e)) %}
+          {% if states('sun.sun') not in ['above_horizon', 'below_horizon'] or
+              not result.valid or not recent(state_attr(e, 'current_time'), state_attr(e, 'model_run'),
+              state_attr(e, 'fetched_at'), as_timestamp(now())) %}unknown
+          {% elif result.risk and is_state('sun.sun', 'below_horizon') %}risk
+          {% elif result.temperature > 4 and result.dew_point > 2 %}warm
+          {% else %}not_indicated{% endif %}
+        attributes:
+          source: Met Office forecast model; estimated frost risk, not ground measurement
+          estimated_dew_point_c: >-
+            {% from 'sky_canvas_frost.jinja' import metrics %}
+            {% set evaluate = metrics | as_function %}
+            {% set e = 'weather.metoffice_direct' %}
+            {% set result = evaluate(state_attr(e, 'temperature'), state_attr(e, 'humidity'),
+                state_attr(e, 'wind_speed'), state_attr(e, 'temperature_unit'),
+                state_attr(e, 'wind_speed_unit'), states(e)) %}
+            {{ result.dew_point | round(2) if result.valid else none }}
+          data_time: "{{ state_attr('weather.metoffice_direct', 'current_time') }}"
+          model_run: "{{ state_attr('weather.metoffice_direct', 'model_run') }}"
+    binary_sensor:
+      - name: Sky Canvas current frost risk
+        unique_id: sky_canvas_current_frost_risk
+        device_class: cold
+        availability: "{{ states('sensor.sky_canvas_frost_conditions') in ['risk', 'warm', 'not_indicated'] }}"
+        state: >-
+          {{ is_state('input_boolean.sky_canvas_frost_current', 'on')
+             and as_timestamp(now()) < (state_attr('input_datetime.sky_canvas_frost_display_expires', 'timestamp') | float(0)) }}
+        attributes:
+          source: Estimated current frost risk; retained through dawn until warm or display expiry
+          expires: "{{ states('input_datetime.sky_canvas_frost_display_expires') }}"
+          assessment: "{{ states('sensor.sky_canvas_frost_conditions') }}"
+          overnight_prediction: "{{ states('input_select.sky_canvas_overnight_frost') }}"
+
+automation:
+  - id: sky_canvas_sun_synchronised_frost
+    alias: Sky Canvas — sun-synchronised frost assessment
+    description: Estimated frost warning and separate current display; all forecasts are cached by the provider.
+    mode: queued
+    max: 3
+    triggers:
+      - trigger: sun
+        event: sunset
+        offset: '-01:30:00'
+        id: evening_check
+      - trigger: sun
+        event: sunrise
+        offset: '-00:45:00'
+        id: morning_check
+      - trigger: sun
+        event: sunrise
+        offset: '+02:00:00'
+        id: display_expiry
+      - trigger: state
+        entity_id: sensor.sky_canvas_frost_conditions
+        id: current_changed
+      - trigger: homeassistant
+        event: start
+        id: recovery
+      - trigger: time_pattern
+        minutes: '/30'
+        id: refresh
+    actions:
+      - variables:
+          next_sunset: "{{ as_timestamp(state_attr('sun.sun', 'next_setting'), none) }}"
+          next_sunrise: "{{ as_timestamp(state_attr('sun.sun', 'next_rising'), none) }}"
+          stamp: "{{ as_timestamp(now()) }}"
+          day_clear_window: >-
+            {{ is_state('sun.sun', 'above_horizon') and next_sunset is number and next_sunset - stamp > 5400 }}
+      - if:
+          - condition: template
+            value_template: >-
+              {{ trigger.id == 'display_expiry' or (day_clear_window and
+                  (is_state('sensor.sky_canvas_frost_conditions', 'warm') or
+                   stamp >= (state_attr('input_datetime.sky_canvas_frost_display_expires', 'timestamp') | float(0)))) }}
+        then:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: [input_boolean.frost_warning, input_boolean.sky_canvas_frost_current]
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sky_canvas_overnight_frost
+            data:
+              option: expired
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: sky_canvas_frost
+      - if:
+          - condition: state
+            entity_id: sensor.sky_canvas_frost_conditions
+            state: risk
+          - condition: template
+            value_template: "{{ next_sunrise is number and next_sunrise > stamp }}"
+        then:
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.sky_canvas_frost_display_expires
+            data:
+              timestamp: "{{ next_sunrise + 7200 }}"
+          - action: input_boolean.turn_on
+            target:
+              entity_id: [input_boolean.frost_warning, input_boolean.sky_canvas_frost_current]
+      - if:
+          - condition: template
+            value_template: >-
+              {{ trigger.id in ['evening_check', 'morning_check', 'recovery', 'refresh']
+                 and next_sunrise is number and
+                 (is_state('sun.sun', 'below_horizon') or
+                  (next_sunset is number and 0 <= next_sunset - stamp <= 5460)) }}
+        then:
+          - variables:
+              weather_data: {}
+          - action: weather.get_forecasts
+            target:
+              entity_id: weather.metoffice_direct
+            data:
+              type: hourly
+            response_variable: weather_data
+            continue_on_error: true
+          - variables:
+              assessment: >-
+                {% from 'sky_canvas_frost.jinja' import night_assessment, fresh %}
+                {% set evaluate = night_assessment | as_function %}
+                {% set recent = fresh | as_function %}
+                {% set e = 'weather.metoffice_direct' %}
+                {% set rows = weather_data.get(e, {}).get('forecast', []) if weather_data is mapping else [] %}
+                {% set start = stamp if is_state('sun.sun', 'below_horizon') else next_sunset %}
+                {% if recent(state_attr(e, 'current_time'), state_attr(e, 'model_run'), state_attr(e, 'fetched_at'), stamp) %}
+                  {{ evaluate(rows, start, next_sunrise, state_attr(e, 'temperature_unit'), state_attr(e, 'wind_speed_unit')) }}
+                {% else %}{{ dict(status='unknown', first_risk=none, valid_hours=0) }}{% endif %}
+          - action: input_select.select_option
+            target:
+              entity_id: input_select.sky_canvas_overnight_frost
+            data:
+              option: "{{ assessment.status }}"
+          - choose:
+              - conditions: "{{ assessment.status == 'risk' }}"
+                sequence:
+                  - action: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.frost_warning
+                  - action: persistent_notification.create
+                    data:
+                      notification_id: sky_canvas_frost
+                      title: Frost risk overnight
+                      message: >-
+                        Met Office model conditions indicate possible frost from
+                        {{ assessment.first_risk | timestamp_custom('%H:%M, %d %b', true) }}.
+                        This is an estimate, not a measurement of frozen ground.
+                        The house image changes only when current conditions indicate risk.
+              - conditions: "{{ assessment.status == 'not_indicated' and is_state('input_boolean.sky_canvas_frost_current', 'off') }}"
+                sequence:
+                  - action: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.frost_warning
+                  - action: persistent_notification.dismiss
+                    data:
+                      notification_id: sky_canvas_frost
+              - conditions: "{{ assessment.status == 'unknown' }}"
+                sequence:
+                  - action: persistent_notification.create
+                    data:
+                      notification_id: sky_canvas_frost
+                      title: Frost assessment unavailable
+                      message: >-
+                        Fresh, complete Met Office data is unavailable for the upcoming night.
+                        Any previous frost warning is retained; this does not establish frost-free conditions.

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "default_clear_day",
+    "path": "custom_components/ha_sky_canvas/images/default/clear_day.png",
+    "sha256": "d3b6bf7f4d1244057fa2593f9c82a7db5e43c508d8863960802046a390d821da",
+    "source": "batch_01/pair_01_clear_day.png"
+  },
+  {
+    "id": "default_clear_night",
+    "path": "custom_components/ha_sky_canvas/images/default/clear_night.png",
+    "sha256": "2fd58fd8580d8d62f7b0c180ad9b633cd26e2ab9e3d240563184ff8d4341982c",
+    "source": "batch_01/pair_01_clear_night.png"
+  },
+  {
+    "id": "default_rain_day",
+    "path": "custom_components/ha_sky_canvas/images/default/rain_day.png",
+    "sha256": "1de7b132924546339f011e6523592c0eb75c8d7f2b4cb0c0782dfb7fcef0c235",
+    "source": "batch_01/pair_02_rain_day.png"
+  },
+  {
+    "id": "default_rain_night",
+    "path": "custom_components/ha_sky_canvas/images/default/rain_night.png",
+    "sha256": "e1f212768bb4bd60fe8304f3f411e43f9f59d4d263420aea1212a07b54705fc0",
+    "source": "batch_01/pair_02_rain_night.png"
+  },
+  {
+    "id": "default_frost_day",
+    "path": "custom_components/ha_sky_canvas/images/default/frost_day.png",
+    "sha256": "33269f51965d07528c214b92054fff43768b5304e7d3e6338263f075993743f0",
+    "source": "batch_01/pair_03_frost_day.png"
+  },
+  {
+    "id": "default_frost_night",
+    "path": "custom_components/ha_sky_canvas/images/default/frost_night.png",
+    "sha256": "17accd7610a92c10bb38a72220fe2a24061fdb223dcecda8dd56f9e53bb473e7",
+    "source": "batch_01/pair_03_frost_night.png"
+  },
+  {
+    "id": "default_snow_day",
+    "path": "custom_components/ha_sky_canvas/images/default/snow_day.png",
+    "sha256": "820954f9cf44cb6a81a49f0474b6bec4a97eeb23d2c4e36412a3e4901c2fe372",
+    "source": "batch_01/pair_04_snow_day.png"
+  },
+  {
+    "id": "default_snow_night",
+    "path": "custom_components/ha_sky_canvas/images/default/snow_night.png",
+    "sha256": "afe2ca699e61dc20d590081c35cc2ebd490e5309ecc32858fbb46869710c3696",
+    "source": "batch_01/pair_04_snow_night.png"
+  },
+  {
+    "id": "christmas_clear_day",
+    "path": "custom_components/ha_sky_canvas/images/christmas/clear_day.png",
+    "sha256": "4c6ca2231badb00b4be1b861c699aebee3e84533be6c5ecb4566325ef5f3c0ec",
+    "source": "batch_02/pair_05_clear_christmas_day.png"
+  },
+  {
+    "id": "christmas_clear_night",
+    "path": "custom_components/ha_sky_canvas/images/christmas/clear_night.png",
+    "sha256": "0da3c6b063d049c73421cf4af31600553bb5dd4627fb744ee7befaa9c4250883",
+    "source": "batch_02/pair_05_clear_christmas_night.png"
+  },
+  {
+    "id": "christmas_rain_day",
+    "path": "custom_components/ha_sky_canvas/images/christmas/rain_day.png",
+    "sha256": "4a35a13d0323423587868a8160bfce09cd827d97bb4fca0b4c1abf7b39454110",
+    "source": "batch_02/pair_06_rain_christmas_day.png"
+  },
+  {
+    "id": "christmas_rain_night",
+    "path": "custom_components/ha_sky_canvas/images/christmas/rain_night.png",
+    "sha256": "35840d4faa1a83546cfcc1c1697ce384e3636923de9244f1bc2a3272b19167b0",
+    "source": "batch_02/pair_06_rain_christmas_night.png"
+  },
+  {
+    "id": "christmas_frost_day",
+    "path": "custom_components/ha_sky_canvas/images/christmas/frost_day.png",
+    "sha256": "a29bbd38ca5cbf22eaa037c0b081bd40a0150bbec4eea84e5c1c1200fb24519c",
+    "source": "batch_02/pair_07_frost_christmas_day.png"
+  },
+  {
+    "id": "christmas_frost_night",
+    "path": "custom_components/ha_sky_canvas/images/christmas/frost_night.png",
+    "sha256": "94c8911691da31de91ed39c0370ec5002711bfecf2002d41c68cf6f4d4288699",
+    "source": "batch_02/pair_07_frost_christmas_night.png"
+  },
+  {
+    "id": "christmas_snow_day",
+    "path": "custom_components/ha_sky_canvas/images/christmas/snow_day.png",
+    "sha256": "6fc7dc92ef707cff54add1c66311f314425fce3f484eb5286cdb18a829f0e526",
+    "source": "batch_02/pair_08_snow_christmas_day.png"
+  },
+  {
+    "id": "christmas_snow_night",
+    "path": "custom_components/ha_sky_canvas/images/christmas/snow_night.png",
+    "sha256": "7dee715f2359379b157a5649ebac16027ec8b1742d4dfed1aec0bbe2be9524c4",
+    "source": "batch_02/pair_08_snow_christmas_night.png"
+  }
+]
