@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">HA Sky Canvas</title>
+  <desc id="desc">A white house beneath a golden sun and a blue sky.</desc>
+  <!-- Original artwork. Copyright (c) 2026 Nathan. MIT licensed. -->
+  <defs>
+    <clipPath id="tile"><rect width="256" height="256" rx="52"/></clipPath>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="256" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#183961"/>
+      <stop offset="1" stop-color="#257eaa"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#tile)">
+  <rect width="256" height="256" rx="52" fill="url(#sky)"/>
+  <circle cx="185" cy="69" r="32" fill="#ffd064"/>
+  <path d="M0 178C38 153 71 149 110 161C151 174 195 185 256 158V204H0Z" fill="#45bad0"/>
+  <path d="M0 218C55 190 102 207 145 204C189 201 225 182 256 191V204A52 52 0 0 1 204 256H52A52 52 0 0 1 0 204Z" fill="#12617e"/>
+  <path d="M42 148L120 84L198 148" fill="none" stroke="#fffaf0" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M59 146L120 84L181 146V214H59Z" fill="#fffaf0"/>
+  <path d="M107 173A13 13 0 0 1 133 173V214H107Z" fill="#183961"/>
+  <rect x="73" y="157" width="22" height="25" rx="3" fill="#ffd064"/>
+  <rect x="145" y="157" width="22" height="25" rx="3" fill="#ffd064"/>
+  </g>
+</svg>
