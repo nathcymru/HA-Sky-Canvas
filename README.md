@@ -56,7 +56,7 @@ The [Met Office example](examples/README.md) supplies a Home Assistant package a
 
 The optional `custom:ha-sky-canvas-weather-card` uses the separate [Met Office Direct integration](https://github.com/nathcymru/ha-metoffice-direct). It preserves the provider's exact weather codes, including showers, drizzle, overcast and day/night variants. The 30 official SVGs are bundled locally in their original colours; viewing a card makes no image request to the Met Office.
 
-Register `/ha_sky_canvas/sky-canvas.js?v=0.2.0-1` as a **JavaScript Module** in **Settings → Dashboards → Resources** before adding either weather card or the forecast map. Use the same URL as the installed integration's frontend module. This ordinary Lovelace resource ensures a fresh direct dashboard load can discover the cards.
+Register `/ha_sky_canvas/sky-canvas.js?v=0.2.0-2` as a **JavaScript Module** in **Settings → Dashboards → Resources** before adding either weather card or the forecast map. Use the same URL as the installed integration's frontend module. This ordinary Lovelace resource ensures a fresh direct dashboard load can discover the cards.
 
 ```yaml
 type: custom:ha-sky-canvas-weather-card
