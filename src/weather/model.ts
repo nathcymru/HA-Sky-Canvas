@@ -23,9 +23,11 @@ const percent = (value: unknown): number | null => { const n = finite(value); re
 
 export function timestamp(value: unknown): number | null {
   if (typeof value !== "string") return null;
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
+  // Global Spot preserves minute precision (e.g. 2026-10-28T07:00Z);
+  // HA's converted forecasts and fetch times can include seconds/fractions.
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,6})?)?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
   if (!match) return null;
-  const [year, month, day, hour, minute, second] = match.slice(1).map(Number);
+  const [year, month, day, hour, minute, second] = match.slice(1).map(part => Number(part ?? 0));
   const calendar = new Date(0); calendar.setUTCFullYear(year, month - 1, day);
   if (calendar.getUTCFullYear() !== year || calendar.getUTCMonth() !== month - 1 || calendar.getUTCDate() !== day || hour > 23 || minute > 59 || second > 59) return null;
   const parsed = Date.parse(value); return Number.isFinite(parsed) ? parsed : null;

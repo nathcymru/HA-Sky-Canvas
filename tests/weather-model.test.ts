@@ -55,6 +55,18 @@ describe("weather normalization", () => {
     expect(weatherStatus(old, now)).toBe("stale");
     old.state = "unavailable"; expect(weatherStatus(old, now)).toBe("unavailable");
   });
+  it("accepts Global Spot minute-precision provenance alongside HA second/fraction timestamps", () => {
+    const item = entity();
+    Object.assign(item.attributes, { current_time: "2026-10-28T12:00Z", model_run: "2026-10-28T10:00Z", fetched_at: "2026-10-28T12:20:00.123456+00:00", metoffice_daily_model_run: "2026-10-28T10:00Z", metoffice_daily_fetched_at: "2026-10-28T12:20:00.123456+00:00" });
+    expect(weatherStatus(item, now)).toBe("ready");
+    expect(weatherStatus(item, now, "daily")).toBe("ready");
+    expect(currentWeather(item, now)?.temperature).toBe(0);
+    expect(timestamp("2026-10-28T13:00+01:00")).toBe(timestamp("2026-10-28T12:00:00Z"));
+    expect(forecastPeriods([{ datetime: "2026-10-28T12:00Z", temperature: 0 }], "hourly", "Europe/London", now)?.[0].temperature).toBe(0);
+    for (const value of ["2026-10-28T12:00", "2026-02-30T12:00Z", "2026-10-28T25:00Z", "2026-10-28T12:61Z", "2026-10-28T12:00:60Z", "2026-10-28T12:00.5Z"]) expect(timestamp(value)).toBeNull();
+    item.attributes.model_run = "2026-10-28T06:30Z";
+    expect(weatherStatus(item, now)).toBe("stale");
+  });
   it("retains exact day/night codes and supplied measurements for each forecast period", () => {
     const daily = forecastPeriods([{ datetime: "2026-10-28T00:00:00Z", metoffice_weather_code: 10, metoffice_night_weather_code: 25, temperature: 12, templow: -2, precipitation_probability: 0 }], "daily", "Europe/London", now)!;
     expect(daily[0].symbol?.label).toBe("Light rain shower (day)");

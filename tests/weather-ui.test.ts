@@ -60,6 +60,17 @@ describe("official weather card", () => {
     expect(root().querySelector("table")).toBeNull();
     expect(root().textContent).toContain("Forecast unavailable");
   });
+  it("renders real Global Spot minute-precision state provenance in current and daily modes", async () => {
+    Object.assign(card.hass.states["weather.metoffice_direct"]!.attributes, { current_time: "2026-10-28T12:00Z", model_run: "2026-10-28T10:00Z", fetched_at: "2026-10-28T12:20:00.123456+00:00", metoffice_daily_model_run: "2026-10-28T09:00Z" });
+    await mount();
+    expect(root().querySelector(".temperature")?.textContent).toContain("0°C");
+    expect(root().textContent).not.toContain("out of date");
+    expect(root().querySelector("footer")?.textContent).toContain("10:00");
+    card.setConfig({ entity: "weather.metoffice_direct", mode: "daily" }); await flush();
+    calls[0].callback({ forecast: [{ ...period(3, "2026-10-28T00:00:00+00:00"), templow: -2 }] }); await flush();
+    expect(root().querySelector("table")).not.toBeNull();
+    expect(root().querySelector("footer")?.textContent).toContain("09:00");
+  });
   it("shows supplied daily day/night variants and never invents a missing night symbol", async () => {
     card.setConfig({ entity: "weather.metoffice_direct", mode: "daily" }); await mount();
     calls[0].callback({ forecast: [{ ...period(3, "2026-10-28T00:00:00Z"), metoffice_night_weather_code: 25, templow: -2 }] }); await flush();
