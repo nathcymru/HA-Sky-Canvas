@@ -4,7 +4,7 @@ Weather and seasonal house scenes behind your Home Assistant dashboards. A local
 
 Default and Christmas house scenes are included so you can see it working immediately. Replace them with your own house, choose the dashboards where they appear, and schedule additional themes from the **Sky Canvas** settings page.
 
-Version 0.2.0 targets Home Assistant Core 2026.10.4. The original 0.1.0 live checks covered dashboard backgrounds, image uploads and explicit saves, seasonal settings, phone/tablet layouts, Light/Auto appearance and the companion forecast-map playback. The frontend adapter uses Home Assistant internals, so future frontend versions require compatibility checks.
+Version 0.2.0 was checked on Home Assistant Core 2026.10.4 with live current/hourly/daily forecasts, dashboard banners, native Energy and Map, phone/tablet layouts, keyboard forecast scrolling and Light/Auto appearance. Refresh existing browser pages after updating. The original scene, upload, explicit-save and seasonal-setting checks remain the 0.1.0 baseline. The frontend adapter uses Home Assistant internals, so future frontend versions require compatibility checks.
 
 ![Sky Canvas theme settings with the bundled day and night house images](docs/settings-preview.jpg)
 
