@@ -152,3 +152,33 @@ async def test_failed_panel_setup_does_not_leave_mutation_api_active(tmp_path, m
             api._store(hass)
     finally:
         await hass.async_stop()
+
+
+@pytest.mark.asyncio
+async def test_unloading_disables_banners_without_changing_saved_preferences(tmp_path, monkeypatch):
+    hass = HomeAssistant(str(tmp_path))
+    try:
+        store = SkyStore(hass)
+        await store.load("weather.metoffice_direct")
+        settings = {
+            key: value
+            for key, value in store.snapshot().items()
+            if key not in ("revision", "themes")
+        }
+        settings["alerts"] = {
+            "enabled": True,
+            "weatherEntity": "sensor.metoffice_direct_warning_level",
+            "floodEntity": None,
+        }
+        await store.change(0, "save_settings", settings)
+        sent = Mock()
+        monkeypatch.setattr("custom_components.ha_sky_canvas.store.async_dispatcher_send", sent)
+        await store.close()
+        disabled = sent.call_args.args[2]
+        assert disabled["alerts"]["enabled"] is False
+        assert disabled["dashboards"] == [] and disabled["applyToAll"] is False
+        restored = SkyStore(hass)
+        await restored.load("weather.metoffice_direct")
+        assert restored.snapshot()["alerts"] == settings["alerts"]
+    finally:
+        await hass.async_stop()

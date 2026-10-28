@@ -28,7 +28,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                     "/ha_sky_canvas/sky-canvas.js",
                     str(Path(__file__).parent / "frontend" / "sky-canvas.js"),
                     cache_headers=True,
-                )
+                ),
+                StaticPathConfig(
+                    "/ha_sky_canvas/weather-icons",
+                    str(Path(__file__).parent / "frontend" / "weather-icons"),
+                    cache_headers=True,
+                ),
             ]
         )
         data["registered"] = True

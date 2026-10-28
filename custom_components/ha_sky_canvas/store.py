@@ -86,6 +86,7 @@ class SkyStore:
             self.active = False
             disabled = self.snapshot()
             disabled.update({"applyToAll": False, "dashboards": []})
+            disabled["alerts"] = {**disabled["alerts"], "enabled": False}
             async_dispatcher_send(self.hass, SIGNAL_CONFIG, disabled)
 
     async def cleanup(self, *_: Any) -> None:

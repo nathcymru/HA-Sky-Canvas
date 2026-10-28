@@ -19,6 +19,7 @@ SETTING_KEYS = {
     "priority",
     "quality",
     "lightning",
+    "alerts",
 }
 
 
@@ -57,6 +58,7 @@ def default_config(weather_entity: str) -> dict[str, Any]:
         "priority": list(BUILTIN_NAMES)[1:],
         "quality": "medium",
         "lightning": False,
+        "alerts": {"enabled": False, "weatherEntity": None, "floodEntity": None},
         "themes": themes,
     }
 
@@ -142,6 +144,18 @@ def validate_settings(settings: Any, theme_ids: set[str]) -> dict[str, Any]:
         raise InvalidConfig("Frost input must be a boolean or binary sensor")
     _boolean(result["applyToAll"], "Apply to all")
     _boolean(result["lightning"], "Lightning")
+    alerts = result["alerts"]
+    if not isinstance(alerts, dict) or set(alerts) != {"enabled", "weatherEntity", "floodEntity"}:
+        raise InvalidConfig("Invalid warning banner settings")
+    _boolean(alerts["enabled"], "Warning banners")
+    for key in ("weatherEntity", "floodEntity"):
+        value = alerts[key]
+        if value is not None and (
+            not isinstance(value, str)
+            or not ENTITY_PATTERN.fullmatch(value)
+            or not value.startswith("sensor.")
+        ):
+            raise InvalidConfig("Warning sources must be sensor entities")
     routes = result["dashboards"]
     if (
         not isinstance(routes, list)
@@ -165,6 +179,16 @@ def validate_settings(settings: Any, theme_ids: set[str]) -> dict[str, Any]:
 
 def validate_config(config: Any) -> dict[str, Any]:
     """Reject corrupt or incompatible persisted data without silently overwriting it."""
+    # Version 0.1.0 had no banner preferences. Add only this known missing field;
+    # retain every user scene and revision, and reject all other corrupt shapes.
+    if isinstance(config, dict) and set(config) == (SETTING_KEYS - {"alerts"}) | {
+        "revision",
+        "themes",
+    }:
+        config = {
+            **config,
+            "alerts": {"enabled": False, "weatherEntity": None, "floodEntity": None},
+        }
     if not isinstance(config, dict) or set(config) != SETTING_KEYS | {"revision", "themes"}:
         raise InvalidConfig("Invalid stored configuration")
     if type(config["revision"]) is not int or config["revision"] < 0:

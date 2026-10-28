@@ -1,6 +1,7 @@
 import type { HomeAssistant, SkyConfig } from "../types";
 import { dashboardSelected } from "./model";
 import { SkyScene } from "./scene";
+import { createWeatherAlerts } from "../alerts";
 
 type HassRoot = HTMLElement & { hass?: HomeAssistant };
 export interface RendererHandle { destroy(): void; }
@@ -21,6 +22,7 @@ export function locateDashboardBackground(documentRoot: Document = document): HT
 }
 
 export function bootstrapSkyCanvas(): RendererHandle {
+  const alerts = createWeatherAlerts();
   let disposed = false;
   let config: SkyConfig | null = null;
   let connection: HomeAssistant["connection"] | null = null;
@@ -99,6 +101,9 @@ export function bootstrapSkyCanvas(): RendererHandle {
   const refresh = (): void => {
     if (disposed || document.hidden) return;
     const hass = document.querySelector<HassRoot>("home-assistant")?.hass;
+    // Warnings apply to every supported dashboard/view independently of whether
+    // the decorative scene is selected. A missing HA session clears the banner.
+    alerts.update(config, hass ?? null);
     if (!hass) { unmount(); return; }
     if (!config || connection !== hass.connection) void fetchConfig(hass);
     const target = config && dashboardSelected(location.pathname, config) ? locateDashboardBackground() : null;
@@ -157,6 +162,7 @@ export function bootstrapSkyCanvas(): RendererHandle {
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", refresh);
       document.removeEventListener("visibilitychange", refresh);
+      alerts.destroy();
       unmount();
     },
   };

@@ -1,0 +1,218 @@
+{
+  "retrieved": "2026-10-28",
+  "guide": "https://weather.metoffice.gov.uk/guides/what-does-this-forecast-mean",
+  "terms": "https://www.metoffice.gov.uk/policies/tandc",
+  "licence": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+  "assets": [
+    {
+      "code": 0,
+      "file": "0.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/0svg?prefix=images",
+      "sha256": "f43e892afddfeb8691e655db8b94061037b46bc0080f4a17e22e978a33262dfc",
+      "bytes": 813
+    },
+    {
+      "code": 1,
+      "file": "1.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/1svg?prefix=images",
+      "sha256": "a3a6052c2487cec0ef23f982aeb6f6e41a0d080b35c82da87b745f1465c5f7ae",
+      "bytes": 572
+    },
+    {
+      "code": 2,
+      "file": "2.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/2svg?prefix=images",
+      "sha256": "03cb651ec3df058c85d2a8d1caae8aec66ef15925367e8dbe09fb988e27fef21",
+      "bytes": 4047
+    },
+    {
+      "code": 3,
+      "file": "3.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/3svg?prefix=images",
+      "sha256": "761d1560875ccc36a071d41b96c99857e643b92b0334c35388dc38e9f23dab02",
+      "bytes": 3818
+    },
+    {
+      "code": 5,
+      "file": "5.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/5svg?prefix=images",
+      "sha256": "59a97a22e683ea49e4d2d9339b1e5057988df3195e829c86ea0195c049899e24",
+      "bytes": 2367
+    },
+    {
+      "code": 6,
+      "file": "6.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/6svg?prefix=images",
+      "sha256": "8e5eaeafd498840acb8f74244634a450ad23747b821a6b22cfb70d194dece54c",
+      "bytes": 2796
+    },
+    {
+      "code": 7,
+      "file": "7.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/7svg?prefix=images",
+      "sha256": "5de1a3a0a313685089f2f9f411a79a0eca220883af57f61e35dddf27c68fcf4d",
+      "bytes": 3450
+    },
+    {
+      "code": 8,
+      "file": "8.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/8svg?prefix=images",
+      "sha256": "310bab26f4c9a1fddab5af42e8c417869d8bd7341b7f9d450ce0fe6aa85b72a3",
+      "bytes": 3450
+    },
+    {
+      "code": 9,
+      "file": "9.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/9svg?prefix=images",
+      "sha256": "c1262ee687c9844df51a3cdbb0273131ed0409653c5165994bee138bd001baec",
+      "bytes": 4598
+    },
+    {
+      "code": 10,
+      "file": "10.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/10svg?prefix=images",
+      "sha256": "8faff280d56a247d240db48a88fe968a294ed5204733e6ef67833d293577786a",
+      "bytes": 4369
+    },
+    {
+      "code": 11,
+      "file": "11.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/11svg?prefix=images",
+      "sha256": "8bc599deb3186de555ede5a486fe1e0947d5a08ae3534962fbe32934206f98e5",
+      "bytes": 5749
+    },
+    {
+      "code": 12,
+      "file": "12.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/12svg?prefix=images",
+      "sha256": "3716a14df5933e39d61490bd2eae78a74c1b28291c7a13c5aca2074cf49f3682",
+      "bytes": 3422
+    },
+    {
+      "code": 13,
+      "file": "13.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/13svg?prefix=images",
+      "sha256": "10607dc71da77b72cb6c39ff5a361c84658d9ecd756e9255ce9f6de41034b400",
+      "bytes": 4341
+    },
+    {
+      "code": 14,
+      "file": "14.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/14svg?prefix=images",
+      "sha256": "23acd361e662affb466bf9df2c1606fb990e4b1422917ca1b5adcc8764574345",
+      "bytes": 4727
+    },
+    {
+      "code": 15,
+      "file": "15.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/15svg?prefix=images",
+      "sha256": "1f69669a88f3b9cc08f3e85fbaba056d5e5a4f4b8522058699b8ae9bef2a805e",
+      "bytes": 3742
+    },
+    {
+      "code": 16,
+      "file": "16.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/16svg?prefix=images",
+      "sha256": "374abf73d49375e7969f1de97c37e3a7a17be0ce45258a2419a2c3c18ae280d7",
+      "bytes": 4797
+    },
+    {
+      "code": 17,
+      "file": "17.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/17svg?prefix=images",
+      "sha256": "27f44a5d0020be5750b72ffd072b7fa86f6cd67b44237a5dcb4e06f044dab214",
+      "bytes": 5192
+    },
+    {
+      "code": 18,
+      "file": "18.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/18svg?prefix=images",
+      "sha256": "50e2e2ea1d252f6cec5755354aa913a88a13233b7da86b7d1c57360a9fc877a6",
+      "bytes": 4836
+    },
+    {
+      "code": 19,
+      "file": "19.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/19svg?prefix=images",
+      "sha256": "49806e8602c2a39e30c7b2664b549ac2720aebe8d7babcbbef4d3104f8887934",
+      "bytes": 5308
+    },
+    {
+      "code": 20,
+      "file": "20.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/20svg?prefix=images",
+      "sha256": "653c9aca2c1e538e59ce17ffceeae13b197d18fe0fa0b2dae1458fab2ffb2eed",
+      "bytes": 5077
+    },
+    {
+      "code": 21,
+      "file": "21.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/21svg?prefix=images",
+      "sha256": "79470520de2b46ab2a4fe1efda005a2e4105d3bb272e0423ef6b4f90d0ce3653",
+      "bytes": 4729
+    },
+    {
+      "code": 22,
+      "file": "22.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/22svg?prefix=images",
+      "sha256": "204412da59841f1063b1fe6c39ffe2d5a0af9c2ebfc871bc2043dc2ce2f04278",
+      "bytes": 4869
+    },
+    {
+      "code": 23,
+      "file": "23.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/23svg?prefix=images",
+      "sha256": "9c72ce8aee394e6fcb1970ff7695a6bc770d4abf3dd0d45acb0e5f155b65afda",
+      "bytes": 4638
+    },
+    {
+      "code": 24,
+      "file": "24.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/24svg?prefix=images",
+      "sha256": "348b6abbc6c46a3e53d1c7f1b89b525d2252af12d8faee3f5412ef2e6886577d",
+      "bytes": 4298
+    },
+    {
+      "code": 25,
+      "file": "25.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/25svg?prefix=images",
+      "sha256": "2a581fe35e09e376822f05fdeef62044cdcd7568e0ef02c295b92b107094c203",
+      "bytes": 5523
+    },
+    {
+      "code": 26,
+      "file": "26.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/26svg?prefix=images",
+      "sha256": "a123d1d4ad9afb038bb3fc78ef49040f48e61a8adfccd8178c6812b58d71cb3f",
+      "bytes": 5286
+    },
+    {
+      "code": 27,
+      "file": "27.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/27svg?prefix=images",
+      "sha256": "6d355d8a84e3ae3af1bac6a346aa2066eef01a2e8463edc791a9ced117a3df54",
+      "bytes": 4336
+    },
+    {
+      "code": 28,
+      "file": "28.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/28svg?prefix=images",
+      "sha256": "7730d5e96d21f9d03a81930f179f9f56a1f7150b491cb3d97857ed79b9bcfb41",
+      "bytes": 4767
+    },
+    {
+      "code": 29,
+      "file": "29.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/29svg?prefix=images",
+      "sha256": "6b7a996dfb79acd0fa2cf773f1dd7206f6c26e3bb21dd42af3515748753bc986",
+      "bytes": 5031
+    },
+    {
+      "code": 30,
+      "file": "30.svg",
+      "source_url": "https://www.metoffice.gov.uk/api/images/file/30svg?prefix=images",
+      "sha256": "9e7489dfdd52547560ba6bdd2505d709cbd87fd2204ab75fc1654775f00d3758",
+      "bytes": 4186
+    }
+  ]
+}

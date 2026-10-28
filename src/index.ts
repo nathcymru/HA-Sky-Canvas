@@ -1,5 +1,6 @@
 import "./settings/index";
 import "./map/index";
+import "./weather/index";
 import { bootstrapSkyCanvas, type RendererHandle } from "./renderer/index";
 
 // Different resource query strings create separate module instances. Keep one

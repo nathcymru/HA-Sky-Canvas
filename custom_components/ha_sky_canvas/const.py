@@ -1,9 +1,9 @@
 """HA Sky Canvas constants."""
 
 DOMAIN = "ha_sky_canvas"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 PANEL_PATH = "ha-sky-canvas"
-MODULE_URL = f"/ha_sky_canvas/sky-canvas.js?v={VERSION}-3"
+MODULE_URL = f"/ha_sky_canvas/sky-canvas.js?v={VERSION}-1"
 STORAGE_VERSION = 1
 SIGNAL_CONFIG = f"{DOMAIN}_config_updated"
 BUILTIN_NAMES = {

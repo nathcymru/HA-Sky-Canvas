@@ -12,6 +12,11 @@ export interface SkyTheme {
   schedule: ThemeSchedule | null;
   images: ImageMap;
 }
+export interface AlertSettings {
+  enabled: boolean;
+  weatherEntity: string | null;
+  floodEntity: string | null;
+}
 export interface SkyConfig {
   revision: number;
   weatherEntity: string;
@@ -21,6 +26,7 @@ export interface SkyConfig {
   priority: string[];
   quality: "low" | "medium" | "high";
   lightning: boolean;
+  alerts?: AlertSettings;
   themes: SkyTheme[];
 }
 export interface HassEntity {

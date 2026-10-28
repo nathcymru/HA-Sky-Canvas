@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="8 8 64 64">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #aaa;
+      }
+
+      .cls-2 {
+        mask: url(#mask);
+      }
+
+      .cls-3 {
+        fill: url(#radial-gradient);
+      }
+
+      .cls-4 {
+        fill: url(#radial-gradient-2);
+      }
+
+      .cls-5 {
+        fill: #7f7f7f;
+      }
+
+      .cls-6 {
+        filter: url(#luminosity-invert);
+      }
+    </style>
+    <radialGradient id="radial-gradient" cx="24.1" cy="59.08" fx="24.1" fy="59.08" r="4.61" gradientTransform="translate(0 5.08) scale(1 .95)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a4caef"/>
+      <stop offset="1" stop-color="#549ce1"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-2" cx="-49.45" cy="615.69" fx="-49.45" fy="615.69" r="4.83" gradientTransform="translate(-132.29 -533.09) rotate(-20.38)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d4d4d4"/>
+      <stop offset="1" stop-color="#aaa"/>
+    </radialGradient>
+    <filter id="luminosity-invert" x="14.01" y="23.4" width="52" height="33" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feColorMatrix result="cm" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"/>
+    </filter>
+    <mask id="mask" x="14.01" y="23.4" width="52" height="33" maskUnits="userSpaceOnUse">
+      <g class="cls-6">
+        <image width="52" height="33" transform="translate(14.01 23.4)" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAiCAYAAAD/NZFTAAAACXBIWXMAAAsSAAALEgHS3X78AAAFH0lEQVRYhe2Za2/aTBCFz/ru+LK2C6YlaRLlQ9X//5saKW0B329gzPuhmu2aEqAtadXoHWlkh0SsH+bM2VnCAOzwuoIpf/sJXiJeJZT2Em/q+z48z4Ou61BVFYwxAMBut8N2u8Vms0FZlsiy7CWWvywU5xxhGGIymcDzPFiWBU3ToCgKGGMYhgGbzQZd1yHPcywWCyRJcnG4i0HFcYybmxtMJhNEUQTP82DbNgzDgKJ8UzlB1XWNsiwRRREWiwUeHx/x+fPnSz3KZaBmsxnu7+9xc3OD6XSKMAzheR6urq6EBIFvUOv1GnVdoygKBEEAzjkMwwBjDE9PT5d4nN+HiuMYDw8PuLu7w3w+H0FZliUqxRgT/dQ0DYqiAOccjuPAMAwYhgFVVfH4+Pj3od69e4e7uzvc3t5iPp9jMpmAcw7XdUdQwPdKtW2LsixFNU3ThK7rAIC+739bir8F9fHjR3z48AH39/d4//494jgW/eQ4DkzTPAjVdR1c14XjOLBtW0Dtdjt0XfdnoabTqagC5xy3t7eil2azmaiS4ziinzRNG1l63/fYbDa4urqCbduimoZhQNd1GIYBz/OQZRmapkHXdUKu57rkSagwDME5h+d5iONY/ByGIeI4xmw2ExUKgmDUS3I/EdQwDOj7HqZpwrIscbVtG7Zti3WSJEFRFCjLUgAtFgusVquTcM9C+b6PKIownU7x5s0bhGGIKIoQhiGCIEAQBIiiSLzmeR5c1xVyUlVVyE4OVVWhaRo0TYOu69B1HaZpCjjXdREEAfI8R5ZlyPMceZ4jSRLx4X769Amr1ernoMIwxPX1NeI4xnQ6FXuPDOT7vliEGt6yrJGFPxeMMfF3BGcYBkzThOM48H1fwBCQbCo0pSyXy/OgOOe4vr7GfD7H27dvR1BRFIFzLsYg13UFjGmao/45JxRFEVZOYCRD13VHZmLbNnRdh6IoYtzabrdI0/Q4lG3biOP4h5QrRUZBi1F1DkntnGCMQdM0qKoq4HRdH/UlyRWA2Ou6rkPbtsJInoUiV+OcIwgChGEoekk2AtqDfqU6x+CoapRkMmQwBFLXNfI8F89yFMowDFiWBcdx4Lqu6BdKx3FGFTrVO78SqqrCMAwA32dFqkxd12IrkHt4P0aaIY0TnGy7dC+PNC8V+wZCkqSk1+gEcBJKUZSRBGQpUF5CbucGY+xg0u8OxQhqt9uJ6/79MAwYhkG4zjAMLwJBztb3/ShpXTnpmfZj1FO029Mos9lssF6vRbZtK/aIYRiESZzz6R2DoKt8Mqb1mqZB0zTC6dq2Hd33fX8cihqSbLKua9R1jaqqRntE3/fCamVJykDHLF7+dAmG1CBD0WGSRqWiKFBVlUh6vqNQVVWJN6Ar2TbBtG0rDIOg5JHo3IodqhApRYYi+06SRGSapkjTFEmSoCzL41BlWSJJEvi+Lw5vVB2Sg2VZo3FI3k8YYz/AnYKivpCnBHlzJag0TbFcLkXSwHsofhiT0jQVZyE6rXZdh6IoRmckstx9+ckwz4HJVSKwfSg6d5EEsyzDarXC169f8eXLF6xWK+R5fh5UWZZ4enoCYwzr9RpN0yDP89FJVt75923+HPkRDN3v95QswaZpUFUVsixDmqZYLBZYLpcHZ75noQAgyzJst1tUVYWiKMQ3Q9RfcoV+FugYmFwxGYyMYblciuPIsWA48V06zVf71aH+2ZfcuVCnwKjX+r4XYKdgxPKnoP7B+P8fBP9MvEqoVxn/AWmpfNFXYwrgAAAAAElFTkSuQmCC"/>
+      </g>
+    </mask>
+  </defs>
+  <path class="cls-3" d="M22.23,65.73c-2.03-1.01-2.72-3.17-1.63-5.13,1.05-1.9,5.73-3.93,6.26-4.15.16-.07.34-.06.49.01h0c.15.08.26.21.29.37.11.54,1.01,5.36-.04,7.26s-3.34,2.65-5.37,1.64Z"/>
+  <path class="cls-4" d="M39.21,58.32l-2.66,1.56v-3.08c0-.23-.19-.42-.42-.42h-.77c-.23,0-.42.19-.42.42v3.11s-2.71-1.52-2.71-1.52c-.2-.11-.46-.04-.57.16l-.38.67c-.11.2-.04.46.16.57l2.69,1.51-2.66,1.56c-.2.12-.27.37-.15.57l.39.67c.12.2.37.27.57.15l2.66-1.56v3.08c0,.23.19.42.42.42h.77c.23,0,.42-.19.42-.42v-3.11s2.71,1.52,2.71,1.52c.2.11.46.04.57-.16l.38-.67c.11-.2.04-.46-.16-.57l-2.69-1.51,2.66-1.56c.2-.12.27-.37.15-.57l-.39-.67c-.12-.2-.37-.27-.57-.15Z"/>
+  <g>
+    <path class="cls-1" d="M60.64,37.81c-1.39-1.53-3.3-2.48-5.36-2.66-1.32-.11-2.65-.03-3.94.25-.72-2.36-2.19-4.42-4.19-5.87-2-1.45-4.42-2.2-6.89-2.14-5.54,0-9.85,3.45-10.46,7.88-1.2-.26-2.86-.12-2.86-.12-5.42.37-9.73,4.31-9.73,9.11,0,5.05,4.62,9.11,10.46,9.11h23.55c5.66,0,11.57-2.22,11.57-9.97,0-2.07-.76-4.06-2.15-5.59Z"/>
+    <g class="cls-2">
+      <path class="cls-5" d="M60.64,37.81c-1.39-1.53-3.3-2.48-5.36-2.66-1.32-.11-2.65-.03-3.94.25-.72-2.36-2.19-4.42-4.19-5.87-2-1.45-4.42-2.2-6.89-2.14-5.54,0-9.85,3.45-10.46,7.88-1.2-.26-2.86-.12-2.86-.12-5.42.37-9.73,4.31-9.73,9.11,0,5.05,4.62,9.11,10.46,9.11h23.55c5.66,0,11.57-2.22,11.57-9.97,0-2.07-.76-4.06-2.15-5.59Z"/>
+    </g>
+  </g>
+</svg>

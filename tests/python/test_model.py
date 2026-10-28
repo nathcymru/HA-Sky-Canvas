@@ -95,3 +95,35 @@ def test_invalid_settings_and_routes_fail_before_save():
     with pytest.raises(InvalidConfig):
         apply_change(config, 0, "save_settings", settings)
     assert config["revision"] == 0
+
+
+def test_legacy_storage_adds_disabled_banners_without_changing_user_scenes():
+    legacy = default_config("weather.metoffice_direct")
+    del legacy["alerts"]
+    legacy["revision"] = 23
+    legacy["dashboards"] = ["dashboard-kiosk"]
+    legacy["themes"][1]["enabled"] = False
+    migrated = validate_config(legacy)
+    assert migrated["alerts"] == {"enabled": False, "weatherEntity": None, "floodEntity": None}
+    assert {key: value for key, value in migrated.items() if key != "alerts"} == legacy
+    assert "alerts" not in legacy
+    del legacy["quality"]
+    with pytest.raises(InvalidConfig):
+        validate_config(legacy)
+
+
+@pytest.mark.parametrize("source", ["https://example.com", "weather.home", "sensor.a/../b", 3])
+def test_banner_source_rejects_urls_and_non_sensor_entities(source):
+    config = default_config("weather.metoffice_direct")
+    config["alerts"]["floodEntity"] = source
+    with pytest.raises(InvalidConfig):
+        validate_config(config)
+
+
+def test_old_client_cannot_silently_erase_saved_banner_sources():
+    config = default_config("weather.metoffice_direct")
+    config["alerts"] = {"enabled": True, "weatherEntity": "sensor.warnings", "floodEntity": None}
+    settings = {key: config[key] for key in SETTING_KEYS - {"alerts"}}
+    with pytest.raises(InvalidConfig):
+        apply_change(config, 0, "save_settings", settings)
+    assert config["alerts"]["enabled"]

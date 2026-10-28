@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DEMO · Sky Canvas weather and flood warnings</title>
+<style>
+  :root{font:16px/1.5 system-ui;color:#17212b;background:#e9eef4;color-scheme:light}
+  *{box-sizing:border-box}body{margin:0}header{background:#132b46;color:white;padding:20px}h1{font-size:22px;line-height:1.25;margin:0 0 8px}header p{margin:0;max-width:850px}main{max-width:1160px;margin:auto;padding:20px}.controls{display:flex;gap:16px;flex-wrap:wrap;align-items:end;margin-bottom:20px}label{display:grid;gap:5px;font-weight:650;max-width:100%;min-width:0}select{max-width:100%;min-width:0;font:inherit;min-height:44px;padding:8px;border:1px solid #68788c;border-radius:6px;background:white;color:#17212b}h2{font-size:17px;margin:0}.device{border:2px solid #526981;border-radius:12px;overflow:hidden;max-width:100%;margin:16px 0;background:#dce6f0}.ha-header{padding:14px 18px;background:#fff;border-bottom:1px solid #becad5;font-weight:700}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:16px}.card{min-height:100px;background:white;border-radius:10px;padding:18px}.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}.example{border:1px solid #bac7d4;border-radius:10px;overflow:hidden;background:#f6f8fb}.example h3{padding:14px 16px 0;margin:0;font-size:15px}.note{padding:0 16px 12px;font-size:13px}.empty{padding:18px;color:#40546a}a{color:#124b80}
+</style>
+<header><h1>DEMO · Weather and flood warning banners</h1><p>Offline, synthetic examples only. These are not live warnings. No Home Assistant connection or weather API request is made by this preview.</p></header>
+<main>
+  <div class="controls">
+    <label>Weather severity<select id="weather"><option value="yellow">Yellow</option><option value="amber">Amber</option><option value="red">Red</option><option value="upcoming">Upcoming red</option><option value="none">None</option><option value="unavailable">Unavailable</option><option value="stale">Stale</option></select></label>
+    <label>Flood severity<select id="flood"><option value="3">3 · Flood alert</option><option value="2">2 · Flood warning</option><option value="1">1 · Severe flood warning</option><option value="0">0 · No active warnings (demo)</option><option value="unavailable">Unavailable</option><option value="stale">Stale</option><option value="outside">Outside published warning areas</option></select></label>
+    <label>Device width<select id="width"><option value="390">Phone · 390px</option><option value="320">Small phone · 320px</option><option value="768" selected>Tablet · 768px</option><option value="1024">Kiosk · 1024px</option></select></label>
+  </div>
+  <h2>Interactive dashboard preview</h2>
+  <div class="device" id="device"><div class="ha-header">☰ &nbsp; Overview · DEMO</div><div id="interactive"></div><div class="cards"><div class="card">Home controls remain in normal document flow.</div><div class="card">Warning details support keyboard navigation.</div></div></div>
+  <h2>All categories and data states</h2><p>Colours support the full category labels. Weather severity and flood severity remain separate.</p>
+  <div class="gallery" id="gallery"></div>
+  <p class="note">Guidance: <a href="https://weather.metoffice.gov.uk/guides/warnings">Met Office weather warnings</a>, <a href="https://weather.metoffice.gov.uk/guides/flood-warnings">flood warnings guide</a>, <a href="https://naturalresources.wales/flooding/what-to-do-in-a-flood/?lang=en">Natural Resources Wales flood advice</a>. Warning symbols here are original, not official agency graphics.</p>
+</main>
+<script type="module" src="./alerts-preview.js"></script>
+</html>

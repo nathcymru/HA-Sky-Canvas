@@ -3,6 +3,8 @@ HA-Sky-Canvas third-party notices
 The browser bundle includes the following BSD-3-Clause packages.
 The license texts below are copied from the exact installed package versions.
 The emitted bundle also retains applicable source-file copyright notices.
+Official forecast assets and published colour values have separate notices
+below; they are not relicensed under the application's MIT licence.
 
 ========================================================================
 lit 3.3.3
@@ -136,3 +138,59 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+========================================================================
+Met Office published forecast symbols and forecast colours
+Retrieved: 28 October 2026
+
+Contains public sector information licensed under the Open Government
+Licence v3.0.
+Licence: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+Website terms: https://www.metoffice.gov.uk/policies/tandc
+
+The distribution includes the 30 original, unchanged weather-condition SVGs
+published in the Met Office forecast guide (codes 0-30 except unused code 4).
+Source: https://weather.metoffice.gov.uk/guides/what-does-this-forecast-mean
+Original URL pattern:
+https://www.metoffice.gov.uk/api/images/file/{code}svg?prefix=images
+
+Each original source URL, file size and SHA-256 digest is recorded in
+frontend/weather-icons/v1/manifest.json. Original gradients, view boxes and
+embedded PNG shadows are preserved. These files are served locally.
+
+Temperature and UV background colours were transcribed from the official
+forecast page's inline styles:
+https://weather.metoffice.gov.uk/forecast/gcpvj0v07
+Their selectors, exact values, retrieved HTML digest and presentation
+adaptations are recorded in frontend/weather-icons/v1/palette-source.json.
+The application selects black or white numeric text for contrast; it does
+not reproduce Met Office typography. Numeric values and category labels
+accompany the colours. Full source notes are in
+frontend/weather-icons/v1/SOURCE.md.
+
+The Met Office public website terms permit public content reuse under OGL
+v3 subject to their exclusions. No separate ownership or licence statement
+was found in the inspected guide or symbol SVGs. These assets and colour
+values retain their source terms and are excluded from the application's
+MIT licence. No Met Office logos, fonts, site scripts or tracking are copied.
+The application is independent and is not endorsed by the Met Office.
+Weather-data attribution is separate: Powered by Met Office data.
+
+========================================================================
+Weather and flood warning presentation provenance
+
+Warning triangles are original application graphics. Published website
+severity colours are used with full category labels and source attribution.
+No agency warning graphics or logos are included.
+
+Met Office weather severity colours:
+https://weather.metoffice.gov.uk/guides/warnings
+Natural Resources Wales flood severity colours:
+https://flood-warning.naturalresources.wales/css/index.css
+
+Natural Resources Wales is the independent authority for the flood feed;
+its warning levels are not Met Office weather-warning levels. Flood data
+retains its own source attribution and provider terms. This notice does not
+apply the Met Office licence to NRW data or graphics. The application is
+not endorsed by either authority. Exact colour provenance and data-contract
+limits are documented in the source repository's src/alerts/README.md.

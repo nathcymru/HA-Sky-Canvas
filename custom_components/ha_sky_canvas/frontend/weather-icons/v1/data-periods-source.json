@@ -1,0 +1,71 @@
+{
+  "retrieved": "2026-10-28",
+  "glossary_page": "https://datahub.metoffice.gov.uk/docs/glossary?sortOrder=ALPHABETICALLY&models=mo-spot-1hr",
+  "glossary_content": "https://datahub.metoffice.gov.uk/docs/glossary/content?sortOrder=ALPHABETICALLY&models=mo-spot-1hr",
+  "content_sha256": "382164013103d9379c7d116b4e7f0c7816b0f3c78002949862eefbec82536bff",
+  "retrieval": "Public documentation content endpoint used by the glossary page; no authenticated weather-data API request.",
+  "parameters": [
+    {
+      "id": "1_hour_precipitation_amount",
+      "label": "Precipitation accumulation - 1 hour (Spot)",
+      "unit": "mm",
+      "timeInterpretation": "Accumulation over previous hour"
+    },
+    {
+      "id": "probability_of_precipitation",
+      "label": "Probability of Precipitation",
+      "unit": "%",
+      "timeInterpretation": "Probability centred over validity time step"
+    },
+    {
+      "id": "day_probability_of_precip",
+      "label": "Probability of precipitation - day",
+      "unit": "%",
+      "timeInterpretation": "Instantaneous"
+    },
+    {
+      "id": "probability_of_precipitation",
+      "label": "Probability of precipitation",
+      "unit": "%",
+      "timeInterpretation": "Probability centred over validity time step"
+    },
+    {
+      "id": "1_hour_10m_max_wind_gust",
+      "label": "Wind gust speed at 10m - 1 hour maximum",
+      "unit": "m/s",
+      "timeInterpretation": "One hour maximum"
+    },
+    {
+      "id": "midday_10m_wind_gust",
+      "label": "Wind speed gust at 10m - midday",
+      "unit": "m/s",
+      "timeInterpretation": "Max three second mean over preceding ten minutes"
+    },
+    {
+      "id": "10m_wind_gust",
+      "label": "Wind gust speed at 10m",
+      "unit": "m/s",
+      "timeInterpretation": "Maximum three second mean over previous ten minutes"
+    },
+    {
+      "id": "significant_weather",
+      "label": "Significant weather code",
+      "unit": "nn",
+      "timeInterpretation": "Instantaneous"
+    }
+  ],
+  "provider_field_mapping": {
+    "totalPrecipAmount": "1_hour_precipitation_amount",
+    "probOfPrecipitation": "probability_of_precipitation",
+    "windGustSpeed10m": "10m_wind_gust",
+    "significantWeatherCode": "significant_weather",
+    "midday10MWindGust": "midday_10m_wind_gust",
+    "dayProbabilityOfPrecipitation": "day_probability_of_precip"
+  },
+  "notes": [
+    "The card uses windGustSpeed10m, not the separate max10mWindGust hourly-maximum field.",
+    "The significant-weather description combines instantaneous conditions with recent-period information, such as preceding-hour rainfall.",
+    "The public forecast website guide describes a different period-start presentation; do not apply it to these raw Global Spot API rows.",
+    "Day precipitation probability is described as local dawn to dusk."
+  ]
+}
