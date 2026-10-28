@@ -6,7 +6,7 @@ Default and Christmas house scenes are included so you can see it working immedi
 
 > Development preview. Home Assistant Core 2026.10.4 is the current test target. Live installation and visual acceptance are recorded separately from automated checks.
 
-![Sky Canvas theme settings with the bundled day and night house images](docs/settings-preview.png)
+![Sky Canvas theme settings with the bundled day and night house images](docs/settings-preview.jpg)
 
 Theme settings shown in the local development preview with demonstration data and the included Default images.
 
@@ -54,7 +54,7 @@ The [Met Office example](examples/README.md) supplies a Home Assistant package a
 
 An optional Lovelace card plays the direct Met Office integration's cached precipitation frames. It shows actual published forecast times, the model run, a time slider and Play/Pause controls. It starts paused, stops when hidden, supports keyboard controls and follows Home Assistant's timezone. Failed or outdated data is labelled explicitly.
 
-Register `/ha_sky_canvas/sky-canvas.js?v=0.1.0-2` as a **JavaScript Module** in **Settings → Dashboards → Resources** before adding the card. Use the same URL as the installed integration's frontend module. This ordinary Lovelace resource ensures a fresh direct dashboard load can discover the card.
+Register `/ha_sky_canvas/sky-canvas.js?v=0.1.0-3` as a **JavaScript Module** in **Settings → Dashboards → Resources** before adding the card. Use the same URL as the installed integration's frontend module. This ordinary Lovelace resource ensures a fresh direct dashboard load can discover the card.
 
 ```yaml
 type: custom:ha-sky-canvas-forecast-map

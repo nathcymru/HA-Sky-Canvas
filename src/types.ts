@@ -32,6 +32,8 @@ export interface HomeAssistant {
   states: Record<string, HassEntity | undefined>;
   config: { time_zone: string; latitude?: number; longitude?: number };
   user?: { is_admin: boolean };
+  /** Effective appearance, including Auto; selectedTheme.dark is only a preference. */
+  themes?: { darkMode: boolean };
   panels?: Record<string, { component_name: string; url_path?: string; title?: string; config?: Record<string, unknown> }>;
   callWS<T = unknown>(message: Record<string, unknown>): Promise<T>;
   fetchWithAuth(path: string, options?: RequestInit): Promise<Response>;

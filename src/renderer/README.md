@@ -20,6 +20,15 @@ scene is decorative, inert and inaccessible to pointer/keyboard input. The house
 uses `object-fit: contain; object-position: center bottom`; its transparent sky lets
 the background remain visible. No image artwork is cropped or stretched.
 
+In Home Assistant's effective Light appearance, the adapter composites the entire
+scene at 15% opacity over the theme's primary background color. This keeps native
+headings readable without changing card styles or individual images; Dark appearance
+retains the original scene. The live test palette (`#e6e9ef` background, `#4c4f69`
+primary text and `#5c5f77` secondary text) has worst-case black-scene contrast ratios
+of 4.67:1 and 3.66:1 respectively. This is a bounded result for that palette, not an
+accessibility guarantee for arbitrary themes or all small secondary text. Appearance
+switches, including Auto, take effect on the next renderer refresh.
+
 The adapter uses this **private frontend structure**, not an official HA background
 extension API:
 

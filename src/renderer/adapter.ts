@@ -125,6 +125,18 @@ export function bootstrapSkyCanvas(): RendererHandle {
       }
     }
     if (config) scene?.update(config, hass);
+    if (mount && scene) {
+      // Native headings sit directly on the decorative background in Light mode.
+      // Composite all three layers together over the theme's own background; do
+      // not recolor cards, modify image assets, or add a fourth visual layer.
+      if (hass.themes?.darkMode === false) {
+        mount.style.backgroundColor = "var(--primary-background-color, #fafafa)";
+        scene.element.style.opacity = "0.15";
+      } else {
+        mount.style.removeProperty("background-color");
+        scene.element.style.removeProperty("opacity");
+      }
+    }
   };
 
   // HA does not expose a global supported renderer lifecycle. A small poll recovers
