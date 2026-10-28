@@ -1,6 +1,7 @@
 import type { HomeAssistant, SkyConfig } from "../types";
 import { SkyCanvasWeatherAlerts } from "./banner";
 import { floodAlerts, weatherAlerts } from "./model";
+import { FloodCoverageResolver } from "./coverage";
 
 export interface WeatherAlertsHandle {
   update(config: Pick<SkyConfig, "alerts"> | null, hass: HomeAssistant | null): void;
@@ -34,25 +35,35 @@ export function createWeatherAlerts(options: WeatherAlertsOptions = {}): Weather
   const now = options.now ?? Date.now;
   let element: SkyCanvasWeatherAlerts | null = null;
   let disposed = false;
+  let currentConfig: Pick<SkyConfig, "alerts"> | null = null;
+  let currentHass: HomeAssistant | null = null;
+  const coverage = new FloodCoverageResolver(render, now);
+  function render(): void {
+    if (disposed) return;
+    const settings = currentConfig?.alerts, hass = currentHass;
+    if (!hass || !settings?.enabled || (!settings.weatherEntity && !settings.floodEntity)) {
+      coverage.reset(); element?.remove(); element = null; return;
+    }
+    const companion = coverage.update(settings.floodEntity, hass);
+    const host = resolveHost();
+    if (!host?.isConnected) { element?.remove(); return; }
+    // Entity state is always rendered as text. The existing renderer owns the
+    // connection; only the cached companion identity uses a read-only HA lookup.
+    element ??= document.createElement("ha-sky-canvas-weather-alerts") as SkyCanvasWeatherAlerts;
+    const clock = now();
+    element.timeZone = hass.config.time_zone;
+    element.feeds = [
+      ...(settings.weatherEntity ? [weatherAlerts(hass.states[settings.weatherEntity], clock)] : []),
+      ...(settings.floodEntity ? [floodAlerts(hass.states[settings.floodEntity], clock, companion)] : []),
+    ];
+    if (element.parentElement !== host) host.prepend(element);
+  }
   return {
     update(config, hass): void {
       if (disposed) return;
-      const settings = config?.alerts;
-      if (!hass || !settings?.enabled || (!settings.weatherEntity && !settings.floodEntity)) { element?.remove(); element = null; return; }
-      const host = resolveHost();
-      if (!host?.isConnected) { element?.remove(); return; }
-      // Never reuse a provider entity as HTML and never request data here. The
-      // existing renderer owns the single HA connection and lifecycle refresh.
-      element ??= document.createElement("ha-sky-canvas-weather-alerts") as SkyCanvasWeatherAlerts;
-      const clock = now();
-      element.timeZone = hass.config.time_zone;
-      element.feeds = [
-        ...(settings.weatherEntity ? [weatherAlerts(hass.states[settings.weatherEntity], clock)] : []),
-        ...(settings.floodEntity ? [floodAlerts(hass.states[settings.floodEntity], clock)] : []),
-      ];
-      if (element.parentElement !== host) host.prepend(element);
+      currentConfig = config; currentHass = hass; render();
     },
-    destroy(): void { disposed = true; element?.remove(); element = null; },
+    destroy(): void { disposed = true; coverage.destroy(); currentConfig = null; currentHass = null; element?.remove(); element = null; },
   };
 }
 

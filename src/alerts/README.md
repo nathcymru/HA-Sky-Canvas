@@ -30,7 +30,14 @@ null. Additional panel adapters require live DOM verification before use.
   A current home-polygon result outside the published areas gets an explicit
   coverage explanation, never a clear/no-risk state. Coverage metadata expires
   after its own daily refresh interval; an old offline result is not restated as
-  a current location fact.
+  a current location fact. Home Assistant omits attributes when the primary
+  warning sensor is unavailable, so a cached read-only entity-registry lookup
+  resolves the integration's coverage diagnostic by platform, unique ID and
+  matching config entry. This supports renamed sensors without guessing names.
+  A connection/selection gets one lookup and at most one recovery after a
+  60-second cooldown if it fails or the companion disappears. Late responses
+  after a connection/selection change or teardown cannot update the banner.
+  The companion supplies only the coverage explanation, never a clear state.
 - A fresh empty list hides the relevant row. Missing, stale, malformed or
   inconsistent data produces an explicit unavailable/out-of-date row, never a
   reassuring zero. No claim is made that an empty warning list means no risk.

@@ -150,9 +150,13 @@ export function weatherAlerts(entity: HassEntity | undefined, now = Date.now()):
   return { ...weatherSource, status: items.length ? "warnings" : "clear", items, fetchedAt: alertTimestamp(attributes.fetched_at) };
 }
 
-export function floodAlerts(entity: HassEntity | undefined, now = Date.now()): AlertFeed {
-  const coverage = entity?.attributes.scope;
-  if (isRecord(coverage) && coverage.selection_method === "home_polygon" && coverage.coverage_status === "outside_known_areas") {
+export function floodAlerts(entity: HassEntity | undefined, now = Date.now(), verifiedCoverage?: HassEntity): AlertFeed {
+  // HA omits extra attributes on unavailable entities. The caller may provide
+  // only a companion verified against the same integration's registry entry.
+  // It supplies location coverage, never warning availability or a clear state.
+  const companion = entity && ["unavailable", "unknown"].includes(entity.state) && verifiedCoverage?.state === "outside_known_areas" ? verifiedCoverage : undefined;
+  const coverage = entity?.attributes.scope ?? companion?.attributes.scope;
+  if (isRecord(coverage) && coverage.type === "area_codes" && Array.isArray(coverage.area_codes) && coverage.area_codes.length === 0 && coverage.selection_method === "home_polygon" && coverage.coverage_status === "outside_known_areas") {
     const resolved = alertTimestamp(coverage.resolved_at);
     // A location-coverage result has its own daily refresh, independent of the
     // warning feed. Do not turn old/offline coverage metadata into a current fact.
